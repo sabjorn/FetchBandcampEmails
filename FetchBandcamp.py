@@ -3,6 +3,8 @@ import pickle
 import os.path
 import base64
 import argparse
+import logging
+import sys
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -22,9 +24,9 @@ def create_service():
     Lists the user's Gmail labels.
     """
     creds = None
-    # The file token.pickle stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
+    # # The file token.pickle stores the user's access and refresh tokens, and is
+    # # created automatically when the authorization flow completes for the first
+    # # time.
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
@@ -60,6 +62,12 @@ if __name__ == '__main__':
 
     service = create_service()
 
+    # NOTE: service above must come first, interacts poorly with logger
+    logger = logging.getLogger()
+    handler = logging.StreamHandler()
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+
     request = service.users().messages().list(userId='me', q="from:noreply@bandcamp.com \"just released\"", labelIds="UNREAD")
     response = request.execute()
     messages = response.get('messages', [])
@@ -69,7 +77,7 @@ if __name__ == '__main__':
         messages += response['messages']
 
     if not len(messages):
-        print('No messages found.')
+        logger.info('No messages found.')
         exit()
     
     urls = set()
@@ -91,17 +99,17 @@ if __name__ == '__main__':
         with open(args.outfile, "w") as f:
             for url in urls:
                 f.write(url+"\n")
-        print(f"writing to {args.outfile}")
+        logger.info(f"writing to {args.outfile}")
     except TypeError as e:
-        print("no output file found, printing to screen")
+        logger.info("no output file found, printing to stdout")
         for url in urls:
-            print(url)
+            sys.stdout.write(f"{url}\n")
         pass
     except Exception as e:
-        print(e)
+        logger.exception("error in generation of data")
 
     if args.mark:
-        print("marking messages as read")
+        logger.info("marking messages as read")
         for message in messages:
             request = service.users().messages().modify(userId="me", id=message['id'], body={"removeLabelIds": ["UNREAD"]})
             response = request.execute()
