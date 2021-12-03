@@ -12,7 +12,11 @@ Scroll down and click: `Enable the Gmail API`
 
 After accepting everything, download the `credentials.json` file and place it in the top level of this project (i.e. `./FetchBandcampEmails/credentials.json`)
 
-**Note**: **DO NOT SHARE THIS FILE**
+Alternatively, follow this:
+
+https://medium.com/@stevelukis/using-python-and-gmail-api-to-retrieve-list-of-senders-to-our-email-be3249f1a6db
+
+**Note**: **DO NOT SHARE THIS FILE** BUT maybe put it in your password manager ;)
 
 ### Python
 run:
