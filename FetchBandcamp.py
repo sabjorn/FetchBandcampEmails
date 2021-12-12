@@ -12,6 +12,10 @@ from google.auth.transport.requests import Request
 
 from bs4 import BeautifulSoup
 
+SEARCH_TERMS = [
+    "just released", # new releases
+    "bought new music on" # from followed users
+]
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = [
@@ -44,6 +48,16 @@ def create_service():
 
     return build('gmail', 'v1', credentials=creds)
 
+def get_messages(query_term):
+    request = service.users().messages().list(userId='me', q=f"from:noreply@bandcamp.com \"{query_term}\"", labelIds="UNREAD")
+    response = request.execute()
+    messages = response.get('messages', [])
+    while response.get('nextPageToken'):
+        request = service.users().messages().list_next(previous_request=request, previous_response=response)
+        response = request.execute()
+        messages += response['messages']
+    return messages
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Finds unread emails from bandcamp and creates a list of URLs and marks emails as read.")
@@ -68,13 +82,9 @@ if __name__ == '__main__':
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
-    request = service.users().messages().list(userId='me', q="from:noreply@bandcamp.com \"just released\"", labelIds="UNREAD")
-    response = request.execute()
-    messages = response.get('messages', [])
-    while response.get('nextPageToken'):
-        request = service.users().messages().list_next(previous_request=request, previous_response=response)
-        response = request.execute()
-        messages += response['messages']
+    messages = []
+    for term in SEARCH_TERMS:
+        messages += get_messages(term)
 
     if not len(messages):
         logger.info('No messages found.')
