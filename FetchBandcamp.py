@@ -101,7 +101,7 @@ if __name__ == '__main__':
         soup = BeautifulSoup(raw_cleaned, 'html.parser')
         for a in soup.find_all('a'):
             href = a.get('href')
-            if "bandcamp.com/album/" in href:
+            if ("bandcamp.com/album/" in href) or ("bandcamp.com/track/" in href):
                 url = href.split('?')[0]
                 urls.add(url)
 
