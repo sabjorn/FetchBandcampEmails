@@ -16,6 +16,7 @@ def parse_bandcamp_data(text):
             pass
 
     data = json.loads(data)
+    track_data = {}
     for track in data["trackinfo"]:
         track_base_url = f"{data['url'].split('.com')[0]}.com"
         track_data = {
@@ -34,9 +35,14 @@ for line in sys.stdin:
         r = requests.get(url)
 
         if r.status_code == 200:
-            tracks.append(parse_bandcamp_data(r.text))
+            try:
+                tracks.append(parse_bandcamp_data(r.text))
+            except:
+                pass
             break
-        
+
+        if r.status_code == 404:
+            break
         print(f"status code: {r.status_code}, retrying in 1 second")
         sleep(1)
 
