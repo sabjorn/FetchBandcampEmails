@@ -72,6 +72,12 @@ if __name__ == '__main__':
         help="optional: directory for printing files, prints to screen otherwise",
         type=str,
         default=None)
+    parser.add_argument(
+        "-j",
+        "--json",
+        help="pull data an export json for BES import",
+        type=str,
+        default=None)
     args = parser.parse_args()
 
     service = create_service()
