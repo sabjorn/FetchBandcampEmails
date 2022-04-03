@@ -16,7 +16,6 @@ def parse_bandcamp_data(text):
             pass
 
     data = json.loads(data)
-    track_data = {}
     for track in data["trackinfo"]:
         track_base_url = f"{data['url'].split('.com')[0]}.com"
         track_data = {
