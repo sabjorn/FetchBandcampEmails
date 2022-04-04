@@ -73,11 +73,10 @@ if __name__ == '__main__':
         type=str,
         default=None)
     parser.add_argument(
-        "-j",
-        "--json",
-        help="pull data an export json for BES import",
-        type=str,
-        default=None)
+        "-l",
+        "--login",
+        help="login only, don't run other processes",
+        action="store_true")
     args = parser.parse_args()
 
     service = create_service()
@@ -87,6 +86,10 @@ if __name__ == '__main__':
     handler = logging.StreamHandler()
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
+    
+    if(args.login):
+        logger.info('Login only selected, exiting.')
+        exit() 
 
     messages = []
     for term in SEARCH_TERMS:
