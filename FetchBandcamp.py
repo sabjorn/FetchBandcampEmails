@@ -13,7 +13,7 @@ from google.auth.transport.requests import Request
 from bs4 import BeautifulSoup
 
 SEARCH_TERMS = [
-    "just released", # new releases
+    "new release", # new releases
     "bought new music on" # from followed users
 ]
 
@@ -49,7 +49,7 @@ def create_service():
     return build('gmail', 'v1', credentials=creds)
 
 def get_messages(query_term):
-    request = service.users().messages().list(userId='me', q=f"from:noreply@bandcamp.com \"{query_term}\"", labelIds="UNREAD")
+    request = service.users().messages().list(userId='me', q=f"from:noreply@bandcamp.com subject:'{query_term}'", labelIds="UNREAD")
     response = request.execute()
     messages = response.get('messages', [])
     while response.get('nextPageToken'):
