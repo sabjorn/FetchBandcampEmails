@@ -13,7 +13,8 @@ from google.auth.transport.requests import Request
 from bs4 import BeautifulSoup
 
 SEARCH_TERMS = [
-    "new release", # new releases
+    "new release",
+    "new releases",
     "bought new music on" # from followed users
 ]
 
