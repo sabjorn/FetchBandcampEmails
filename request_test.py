@@ -16,14 +16,15 @@ def parse_bandcamp_data(text):
             pass
 
     data = json.loads(data)
+    track_data = []
     for track in data["trackinfo"]:
         track_base_url = f"{data['url'].split('.com')[0]}.com"
-        track_data = {
+        track_data.append({
             "url": f"{track_base_url}{track['title_link']}",
             "meta": f"{track['track_num']} : {data['artist']} - {track['title']}",
             "img_id": data["art_id"],
             "mp3-128": track["file"]["mp3-128"]
-        }
+        })
     return track_data
 
 
@@ -35,7 +36,7 @@ for line in sys.stdin:
 
         if r.status_code == 200:
             try:
-                tracks.append(parse_bandcamp_data(r.text))
+                tracks += parse_bandcamp_data(r.text)
             except:
                 pass
             break
