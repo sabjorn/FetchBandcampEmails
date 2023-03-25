@@ -29,8 +29,8 @@ def main(args):
     for track in tracks:
         for c in collection:
             if c["item_title"] == track["Track Title"]:
-                track_urls.add(f'{track["#"]}, {c["item_title"]}, {c["item_url"]}')
-    ordered = OrderedDict(sorted({t.split(",")[0]: t.split(",")[-1] for t in track_urls}.items()))
+                track_urls.add(f'{track["#"]},{c["item_title"]},{c["item_url"]}')
+    ordered = OrderedDict(sorted({int(t.split(",")[0]): t.split(",")[-1] for t in track_urls}.items()))
     [print(url) for url in ordered.values()] 
 
 if __name__ == "__main__":
