@@ -15,6 +15,15 @@ from mutagen.id3 import ID3, TRCK, TDRC, TIT2, TALB, TPE1, TPOS, TCON, TCOM, TPO
 
 from api.tralbum_details import TralbumRequestData, get_tralbum_details
 
+@dataclass 
+class BCPurchase:
+    track_id: int
+    unit_price: float
+    currency: str
+    tralbum_type: str # = 't'
+    track_url: str
+    
+
 def parse_bandcamp_data(text: str) -> list[TralbumRequestData]:
     soup = BeautifulSoup(text, 'html.parser')
 
@@ -73,15 +82,6 @@ if __name__ == '__main__':
 
     track_details = [get_tralbum_details(track) for track in tracks]
     
-
-    @dataclass 
-    class BCPurchase:
-        track_id: int
-        unit_price: float
-        currency: str
-        tralbum_type: str # = 't'
-        track_url: str
-
     @dataclass
     class BCMetadata:
         purchase_data: BCPurchase
