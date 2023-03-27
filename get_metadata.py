@@ -173,7 +173,11 @@ if __name__ == '__main__':
         audio.tags.add(COMM(encoding=3, desc='', lang='XXX', text=[json.dumps(purchase_data)]))
 
         audio.save(audio_buffer)
-        
-        with open(os.path.join(args.outfile, output_filename), "wb") as f:
-            f.write(audio_buffer.getbuffer())
+   
+        try:
+            with open(os.path.join(args.outfile, output_filename), "wb") as f:
+                f.write(audio_buffer.getbuffer())
+        except Exception as e:
+            logger.exception(e)
+            continue
 
