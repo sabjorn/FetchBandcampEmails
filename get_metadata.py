@@ -135,7 +135,7 @@ if __name__ == '__main__':
     
     # download, annotate, and save files
     for d in metadata:
-        output_filename = f"{d.band_name}-{d.track_title}.mp3".replace(" ", "_").lower()
+        output_filename = f"{d.band_name}-{d.track_title}.mp3".replace(" ", "_").replace("/", "-").lower()
         logger.info(f"downloading: {output_filename}")
 
         # download image
@@ -157,9 +157,9 @@ if __name__ == '__main__':
 
         audio.add_tags()
 
-        audio.tags.add(TIT2(encoding=3, text=d.track_title))
-        audio.tags.add(TALB(encoding=3, text=d.album_title))
-        audio.tags.add(TPE1(encoding=3, text=d.band_name))
+        if d.track_title: audio.tags.add(TIT2(encoding=3, text=d.track_title))
+        if d.album_title: audio.tags.add(TALB(encoding=3, text=d.album_title))
+        if d.band_name: audio.tags.add(TPE1(encoding=3, text=d.band_name))
 
         audio.tags.add(APIC(
                       encoding=3,
@@ -174,6 +174,6 @@ if __name__ == '__main__':
 
         audio.save(audio_buffer)
         
-        with open(f"/{args.outfile}/{output_filename}", "wb") as f:
+        with open(os.path.join(args.outfile, output_filename), "wb") as f:
             f.write(audio_buffer.getbuffer())
 
