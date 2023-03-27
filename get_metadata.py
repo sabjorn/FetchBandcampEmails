@@ -136,6 +136,11 @@ if __name__ == '__main__':
     # download, annotate, and save files
     for d in metadata:
         output_filename = f"{d.band_name}-{d.track_title}.mp3".replace(" ", "_").replace("/", "-").lower()
+        output_filename_full = os.path.join(args.outfile, output_filename)
+
+        if os.path.exists(output_filename_full):
+            continue
+        
         logger.info(f"downloading: {output_filename}")
 
         # download image
@@ -175,7 +180,7 @@ if __name__ == '__main__':
         audio.save(audio_buffer)
    
         try:
-            with open(os.path.join(args.outfile, output_filename), "wb") as f:
+            with open(output_filename_full, "wb") as f:
                 f.write(audio_buffer.getbuffer())
         except Exception as e:
             logger.exception(e)
