@@ -97,8 +97,8 @@ def users_factory(tracks: dict[TrackId, Track], num_users: int, overlap: float =
 master_collection = collection_factory(1000)
 users = users_factory(tracks=master_collection, num_users=10, overlap = .9)
 
-def find_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) -> dict[UserId, dict[UserId, set[TrackId]]]:
-    relationships = {}
+def find_sorted_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) -> dict[UserId, dict[UserId, set[TrackId]]]:
+    sorted_relationships = {}
     for user_id, user in users.items():
         for track in user.collection:
             friends = master_collection[TrackId(track.id)].owners.copy()
@@ -107,30 +107,15 @@ def find_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) 
             for friend in friends:
                 overlap = users[friend].collection.intersection(user.collection)
                 matched[friend] =  overlap
-            relationships[user_id] = matched
-    return relationships
+            sorted_relationships[user_id] = dict(sorted(matched.items(), key=lambda x: len(x[1]), reverse=True))
+    return sorted_relationships
 
 
-relationships = find_relationships(master_collection, users)
-print("relationships")
-for user, friends in relationships.items():
+sorted_relationships = find_sorted_relationships(master_collection, users)
+print("sorted_relationships")
+for user, friends in sorted_relationships.items():
     print(f"user: {user}")
     for friend, collection in friends.items():
         print(f"\t{friend}: count: {len(collection)}") 
 
-def sort_relationship(relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[UserId, int]]:
-    sorted_relationships: dict[UserId, dict[UserId, int]] = {}
-    for user_id in users:
-        relationship = relationships[user_id]
-        counts = {key: len(val) for key, val in relationship.items()}
-        sorted_relationships[user_id] = dict(sorted(counts.items(), key=lambda x: x[1], reverse=True))
-
-    return sorted_relationships
-
-sorted_relationships = sort_relationship(relationships=relationships)
-print("sorted_relationships")
-for user, friends in sorted_relationships.items():
-    print(f"user: {user}")
-    for friend, count in friends.items():
-        print(f"\tfriend:\t{friend}, count: {count}")
-
+# note -- users_factory is not very useful since it doesn't actually model overlap between different users well...
