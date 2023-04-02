@@ -120,11 +120,15 @@ def sort_relationship(relationships: dict[UserId, dict[UserId, set[TrackId]]]) -
     sorted_relationships: dict[UserId, dict[UserId, int]] = {}
     for user_id in users:
         relationship = relationships[user_id]
-        counts = {key: len(val) for key, val in relationships.items()}
+        counts = {key: len(val) for key, val in relationship.items()}
         sorted_relationships[user_id] = dict(sorted(counts.items(), key=lambda x: x[1], reverse=True))
 
     return sorted_relationships
 
 sorted_relationships = sort_relationship(relationships=relationships)
-#print(sorted_relationships)
+print("sorted_relationships")
+for user, friends in sorted_relationships.items():
+    print(f"user: {user}")
+    for friend, count in friends.items():
+        print(f"\tfriend:\t{friend}, count: {count}")
 
