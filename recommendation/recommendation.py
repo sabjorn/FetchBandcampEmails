@@ -97,8 +97,7 @@ users = users_factory(tracks=master_collection, num_users=10, overlap = 0.2)
 
 def find_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) -> dict[UserId, dict[UserId, set[TrackId]]]:
     relationships = {}
-    for user in users.values():
-        user_id = UserId(user.id)
+    for user_id, user in users.items():
         for track in user.collection:
             friends = master_collection[TrackId(track.id)].owners.copy()
             friends.remove(user.id)
@@ -111,6 +110,11 @@ def find_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) 
 
 
 relationships = find_relationships(master_collection, users)
+print("relationships")
+for user, friends in relationships.items():
+    print(f"user: {user}")
+    for friend, collection in friends.items():
+        print(f"\t{friend}: count: {len(collection)}") 
 
 def sort_relationship(relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[UserId, int]]:
     sorted_relationships: dict[UserId, dict[UserId, int]] = {}
@@ -122,16 +126,5 @@ def sort_relationship(relationships: dict[UserId, dict[UserId, set[TrackId]]]) -
     return sorted_relationships
 
 sorted_relationships = sort_relationship(relationships=relationships)
-print(sorted_relationships)
+#print(sorted_relationships)
 
-
-#print(users)
-## user adds track
-#
-#user1 = User()
-#master_collection[1].add(user1) # dict lookup, add user1 to list of users who own
-#
-#for track in master_collection:
-#    if user1 not in track:
-#        continue
-#    print(track)
