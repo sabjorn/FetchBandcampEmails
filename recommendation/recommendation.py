@@ -94,7 +94,7 @@ def users_factory(tracks: dict[TrackId, Track], num_users: int, overlap: float =
     return users
 
 
-master_collection = collection_factory(1000)
+master_collection = collection_factory(100)
 users = users_factory(tracks=master_collection, num_users=10, overlap = .9)
 
 def find_sorted_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) -> dict[UserId, dict[UserId, set[TrackId]]]:
@@ -119,3 +119,15 @@ for user, friends in sorted_relationships.items():
         print(f"\t{friend}: count: {len(collection)}") 
 
 # note -- users_factory is not very useful since it doesn't actually model overlap between different users well...
+
+def print_first_order_suggestions(sorted_relationships):
+    for user_id, collections in sorted_relationships.items():
+        print(f"User: {user_id}")
+        keys = list(collections)
+        if not keys:
+            continue
+        first_key = keys[0]
+        collection = collections[first_key]
+        print(f"tracks: {collection}")
+
+print_first_order_suggestions(sorted_relationships=sorted_relationships)
