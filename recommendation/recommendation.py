@@ -131,3 +131,15 @@ def print_first_order_suggestions(sorted_relationships):
         print(f"tracks: {collection}")
 
 print_first_order_suggestions(sorted_relationships=sorted_relationships)
+
+# the tracks that overlap the largest number of relationships
+second_order_relationships: dict[UserId, set[TrackId]] = {}
+for user_id, collections in sorted_relationships.items():
+    all_friend_collections = collections.values()
+    if not all_friend_collections:
+        continue
+    second_order_relationships[user_id] = set.intersection(*all_friend_collections)
+
+print(second_order_relationships)
+    
+
