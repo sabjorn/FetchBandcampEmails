@@ -77,13 +77,15 @@ def collection_factory(count: int) -> dict[TrackId, Track]:
         collection[track.id] = track
     return collection
 
+
 def users_factory(tracks: dict[TrackId, Track], num_users: int, overlap: float = 0.5) -> dict[UserId, User]:
     offset = 0
-    step = int(overlap * (len(tracks) / num_users))
+    tracks_per_user = len(tracks) // num_users
+    step = tracks_per_user - int(overlap * tracks_per_user)
     users = {}
     for i in range(num_users):
         user = User(i)
-        for i in range(0, num_users):
+        for i in range(0, tracks_per_user):
             track_id = TrackId(i + offset)
             user.collection.add(track_id)
             tracks[track_id].owners.add(user._id)
@@ -92,8 +94,8 @@ def users_factory(tracks: dict[TrackId, Track], num_users: int, overlap: float =
     return users
 
 
-master_collection = collection_factory(100)
-users = users_factory(tracks=master_collection, num_users=10, overlap = 0.2)
+master_collection = collection_factory(1000)
+users = users_factory(tracks=master_collection, num_users=10, overlap = .9)
 
 def find_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) -> dict[UserId, dict[UserId, set[TrackId]]]:
     relationships = {}
