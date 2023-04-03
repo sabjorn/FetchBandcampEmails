@@ -156,7 +156,19 @@ print(second_order_relationships)
 ### histogram of track occurances
 ## add a weight based on the rank of the neightbour that has it in collection
 ## order the remaining set based on total occurances, **maybe** with coefficient based on the ordered collection? 
-# track_count = {}
-# all_occurances = [track for track in all_collections)
+def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, int]]:
+    track_frequency: dict[UserId, dict[TrackId, int]] = {}
+    for user_id, collections in sorted_relationships.items():
+        all_occurances = []
+        for collection in collections.values():
+            all_occurances += list(collection)
+        count: dict[TrackId, int] = {}
+        for track_id in set(all_occurances):
+           count[track_id] = all_occurances.count(track_id)
+        track_frequency[user_id] = count
+    return track_frequency
+
+track_frequency = calculate_track_frequency(sorted_relationships=sorted_relationships)
+print(track_frequency)
 # for track in set(all_occurances):
 #     track_count[track] = all_occurances.count(track) # or track_count[track] = all_occurances.count(track) * neighbour_count 
