@@ -115,8 +115,8 @@ sorted_relationships = find_sorted_relationships(master_collection, users)
 print("sorted_relationships")
 for user, friends in sorted_relationships.items():
     print(f"user: {user}")
-    for friend, collection in friends.items():
-        print(f"\t{friend}: count: {len(collection)}") 
+    for friend_id, collection in friends.items():
+        print(f"friend:\t{friend_id}: count: {len(collection)}") 
 
 # note -- users_factory is not very useful since it doesn't actually model overlap between different users well...
 
@@ -153,9 +153,6 @@ second_order_relationships = find_second_order_relationships(sorted_relationship
 print(second_order_relationships)
  
 
-### histogram of track occurances
-## add a weight based on the rank of the neightbour that has it in collection
-## order the remaining set based on total occurances, **maybe** with coefficient based on the ordered collection? 
 def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, int]]:
     track_frequency: dict[UserId, dict[TrackId, int]] = {}
     for user_id, collections in sorted_relationships.items():
@@ -170,5 +167,4 @@ def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, se
 
 track_frequency = calculate_track_frequency(sorted_relationships=sorted_relationships)
 print(track_frequency)
-# for track in set(all_occurances):
-#     track_count[track] = all_occurances.count(track) # or track_count[track] = all_occurances.count(track) * neighbour_count 
+
