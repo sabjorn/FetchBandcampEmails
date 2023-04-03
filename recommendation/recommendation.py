@@ -97,6 +97,7 @@ def users_factory(tracks: dict[TrackId, Track], num_users: int, overlap: float =
 master_collection = collection_factory(100)
 users = users_factory(tracks=master_collection, num_users=10, overlap = .9)
 
+# find overlap between 'friend' collection and own, rank that user based on number of overlaps
 def find_sorted_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) -> dict[UserId, dict[UserId, set[TrackId]]]:
     sorted_relationships = {}
     for user_id, user in users.items():
@@ -104,9 +105,9 @@ def find_sorted_relationships(tracks: dict[TrackId, Track], users: dict[UserId, 
             friends = master_collection[TrackId(track.id)].owners.copy()
             friends.remove(user.id)
             matched: dict[UserId, set[TrackId]] = {}
-            for friend in friends:
-                overlap = users[friend].collection.intersection(user.collection)
-                matched[friend] =  overlap
+            for friend_id in friends:
+                overlap = users[friend_id].collection.intersection(user.collection)
+                matched[friend_id] = overlap
             sorted_relationships[user_id] = dict(sorted(matched.items(), key=lambda x: len(x[1]), reverse=True))
     return sorted_relationships
 
@@ -133,7 +134,7 @@ def print_first_order_suggestions(sorted_relationships):
 
 print_first_order_suggestions(sorted_relationships=sorted_relationships)
 
-# the tracks that overlap the largest number of relationships
+# the tracks that overlap between the largest number of relationships
 def find_second_order_relationships(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]], rank: int | None = None) -> dict[UserId, set[TrackId]]:
     second_order_relationships: dict[UserId, set[TrackId]] = {}
     for user_id, collections in sorted_relationships.items():
@@ -151,7 +152,6 @@ def find_second_order_relationships(sorted_relationships: dict[UserId, dict[User
 
 second_order_relationships = find_second_order_relationships(sorted_relationships=sorted_relationships)
 print(second_order_relationships)
- 
 
 def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, int]]:
     track_frequency: dict[UserId, dict[TrackId, int]] = {}
@@ -168,3 +168,27 @@ def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, se
 track_frequency = calculate_track_frequency(sorted_relationships=sorted_relationships)
 print(track_frequency)
 
+def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, float]]:
+    # calculates a normalized frequency by multiplying every occurance of that track in a collection by the count of tracks shared in that collection 
+    weighted_track_frequency: dict[UserId, dict[TrackId, float]] = {}
+    for user_id, collections in sorted_relationships.items():
+        all_occurances = []
+        for collection in collections.values():
+            all_occurances += list(collection)
+        all_tracks = set(all_occurances)
+
+        weights: dict[TrackId, float] = {track_id: 0.0 for track_id in all_occurances}
+        for tracks in collections.values():
+            weight = len(tracks) 
+            for track_id in tracks:
+                weights[track_id] += weight
+
+        maximum_value = max(weights.values()) if weights.values() else 1.0
+        weights = {track_id: (weight / maximum_value) for track_id, weight in weights.items()}
+
+        weighted_track_frequency[user_id] = dict(sorted(weights.items(), key=lambda x: x[1], reverse=True))
+    return weighted_track_frequency
+
+weighted_track_frequency = calculate_weighted_track_frequency(sorted_relationships)
+print(weighted_track_frequency)
+    
