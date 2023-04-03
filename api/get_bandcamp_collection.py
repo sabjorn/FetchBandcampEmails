@@ -3,6 +3,8 @@ import requests
 import argparse
 import time
 
+import logging
+logger = logging.getLogger()
 # todo: bug -- pagnation doesn't work correctly and creates too many
 # likely older_than_token not working properly...
 def get_collection(fan_id, cookie, older_than=None):
@@ -15,18 +17,25 @@ def get_collection(fan_id, cookie, older_than=None):
         'Cookie': f'identity={cookie}',
     }
 
-    collection_items = []
+    items = []
+    item_lookup = {}
     while True:
         data = {'fan_id':f'{fan_id}', 'older_than_token': older_than_token,'count':'1000'}
         r = requests.post(url, headers=headers, json=data)
+
+        if r.status_code != 200:
+            logger.error("get_collection failed", r.json())
+            break
+
         json = r.json()
         
-        collection_items += json["items"]
+        items += json["items"]
+        item_lookup = {**item_lookup, **json['item_lookup']}
         older_than_token = json["last_token"]
         if not json["more_available"]:
             break
 
-    return collection_items
+    return items, item_lookup
 
 
 """ collection summary - from https://bandcamp.com/dataist/feed?from=menubar
@@ -40,7 +49,7 @@ def main(args):
             required=True, type=int, help="bandcamp fan_id")
     args = parser.parse_args(args)
    
-    purchased_albums = get_collection(args.fan_id, args.cookie) 
+    items, purchased_albums = get_collection(args.fan_id, args.cookie) 
 
     return purchased_albums
 

@@ -16,7 +16,7 @@ def get_collected_by(tralbum_keys: list[str], cookie):
     r = requests.post(url, headers=headers, json=data)
     json = r.json()
 
-    return json
+    return json['collected_by']
 
 
 def main(args):
