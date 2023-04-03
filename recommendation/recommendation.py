@@ -121,6 +121,7 @@ for user, friends in sorted_relationships.items():
 # note -- users_factory is not very useful since it doesn't actually model overlap between different users well...
 
 def print_first_order_suggestions(sorted_relationships):
+    print("first order suggestions")
     for user_id, collections in sorted_relationships.items():
         print(f"User: {user_id}")
         keys = list(collections)
@@ -133,13 +134,29 @@ def print_first_order_suggestions(sorted_relationships):
 print_first_order_suggestions(sorted_relationships=sorted_relationships)
 
 # the tracks that overlap the largest number of relationships
-second_order_relationships: dict[UserId, set[TrackId]] = {}
-for user_id, collections in sorted_relationships.items():
-    all_friend_collections = collections.values()
-    if not all_friend_collections:
-        continue
-    second_order_relationships[user_id] = set.intersection(*all_friend_collections)
+def find_second_order_relationships(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]], rank: int | None = None) -> dict[UserId, set[TrackId]]:
+    second_order_relationships: dict[UserId, set[TrackId]] = {}
+    for user_id, collections in sorted_relationships.items():
+        all_friend_collections = collections.values()
 
+        if rank and rank < len(collections): # how many users to consider
+            sliced_keys = [*collections.keys()][:rank]
+            sliced_dict = {i: collections[i] for i in sliced_keys}
+            all_friend_collections = sliced_dict.values() 
+
+        if not all_friend_collections:
+            continue
+        second_order_relationships[user_id] = set.intersection(*all_friend_collections)
+    return second_order_relationships
+
+second_order_relationships = find_second_order_relationships(sorted_relationships=sorted_relationships)
 print(second_order_relationships)
-    
+ 
 
+### histogram of track occurances
+## add a weight based on the rank of the neightbour that has it in collection
+## order the remaining set based on total occurances, **maybe** with coefficient based on the ordered collection? 
+# track_count = {}
+# all_occurances = [track for track in all_collections)
+# for track in set(all_occurances):
+#     track_count[track] = all_occurances.count(track) # or track_count[track] = all_occurances.count(track) * neighbour_count 
