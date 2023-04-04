@@ -44,14 +44,16 @@ logging.info(f"TRACKS, total count: {len(TRACKS)}")
 def find_sorted_relationships() -> dict[UserId, dict[UserId, set[TrackId]]]:
     sorted_relationships = {}
     for user_id in USERS:
+        friends: set[UserId] = set()
         for track_id in USERS[user_id].collection:
-            friends = TRACKS[track_id].owners.copy()
-            friends.remove(user_id)
-            matched: dict[UserId, set[TrackId]] = {}
-            for friend_id in friends:
-                overlap = USERS[friend_id].collection.intersection(USERS[user_id].collection)
-                matched[friend_id] = overlap
-            sorted_relationships[user_id] = dict(sorted(matched.items(), key=lambda x: len(x[1]), reverse=True))
+            friends.update(TRACKS[track_id].owners)
+        friends.discard(user_id)
+
+        matched: dict[UserId, set[TrackId]] = {}
+        for friend_id in friends:
+            overlap = USERS[friend_id].collection.intersection(USERS[user_id].collection)
+            matched[friend_id] = overlap
+        sorted_relationships[user_id] = dict(sorted(matched.items(), key=lambda x: len(x[1]), reverse=True))
     return sorted_relationships
 
 sorted_relationships = find_sorted_relationships()
