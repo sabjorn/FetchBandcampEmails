@@ -62,23 +62,20 @@ sorted_relationships = find_sorted_relationships()
 def find_second_order_relationships(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]], rank: int | None = None) -> dict[UserId, set[TrackId]]:
     second_order_relationships: dict[UserId, set[TrackId]] = {}
     for user_id, collections in sorted_relationships.items():
-        all_friend_collections = collections.values()
-
-        if rank and rank < len(collections): # how many users to consider
-            sliced_keys = [*collections.keys()][:rank]
-            sliced_dict = {i: collections[i] for i in sliced_keys}
-            all_friend_collections = sliced_dict.values() 
-
-        if not all_friend_collections:
+        friends = list(collections)[:rank] if rank else list(collections) # order is important
+        
+        friends_collections = [USERS[friend_id].collection for friend_id in friends]
+        if not friends_collections:
             continue
 
-        intersection = set.intersection(*all_friend_collections)
+        intersection = set.intersection(*friends_collections)
         if not intersection:
             continue
         second_order_relationships[user_id] = intersection
 
     return second_order_relationships
 
+# need to write test -- although I think it works...
 second_order_relationships = find_second_order_relationships(sorted_relationships=sorted_relationships)
 
 #def print_first_order_suggestions(sorted_relationships):
