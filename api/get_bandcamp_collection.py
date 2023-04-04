@@ -22,8 +22,13 @@ def get_collection(fan_id, cookie, older_than=None):
         data = {'fan_id':f'{fan_id}', 'older_than_token': older_than_token,'count':20}
         r = requests.post(url, headers=headers, json=data)
 
+        if r.status_code == 429:
+            logger.error("get_collection rate limited, attempting again in 5 seconds")
+            time.sleep(5)
+            continue
+
         if r.status_code != 200:
-            logger.error("get_collection failed", r.json())
+            logger.error("get_collection failed", r.status_code, r.reason)
             break
 
         json = r.json()
