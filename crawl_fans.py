@@ -50,30 +50,23 @@ def main(args):
     args = parser.parse_args(args)
     
     logger.info("grabbing first collection")  
-    first_collection = collection_helper(args.fan_id, args.cookie, args.output_dir)
+    primary_collection = collection_helper(args.fan_id, args.cookie, args.output_dir)
 
     logger.info("collecting track owners")  
     track_owners = {}
-    collection_chunks = chunkify(first_collection, 100)
+    collection_chunks = chunkify(primary_collection, 100)
     for chunk in collection_chunks:
         collectors = collected_by.get_collected_by(chunk, args.cookie)
         for key, val in collectors.items():
-            track_owners[key] = set([str(item['fan_id']) for item in val['thumbs']])
+            track_owners[key] = set([item['fan_id'] for item in val['thumbs']])
 
-    logger.info("saving track owners")  
-    with open(os.path.join(args.output_dir, "tracks.json"), "w") as f:
-        tmp_track = {key: list(val) for key, val in track_owners.items()}
-        json.dump(tmp_track, f, indent=4)
- 
     user_list = set()
     for val in track_owners.values():
         user_list = {*user_list, *val} 
     
     for user in user_list:
         logger.info(f"getting collection for {user}")
-        collection = collection_helper(user, args.cookie, args.output_dir)
-
-    return collection, collectors
+        collection_helper(user, args.cookie, args.output_dir)
 
 if __name__ == "__main__":
-    collection, collectors = main(sys.argv[1:])
+    main(sys.argv[1:])
