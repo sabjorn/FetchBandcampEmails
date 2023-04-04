@@ -18,9 +18,8 @@ def get_collection(fan_id, cookie, older_than=None):
     }
 
     items = []
-    item_lookup = {}
     while True:
-        data = {'fan_id':f'{fan_id}', 'older_than_token': older_than_token,'count':'1000'}
+        data = {'fan_id':f'{fan_id}', 'older_than_token': older_than_token,'count':20}
         r = requests.post(url, headers=headers, json=data)
 
         if r.status_code != 200:
@@ -30,12 +29,12 @@ def get_collection(fan_id, cookie, older_than=None):
         json = r.json()
         
         items += json["items"]
-        item_lookup = {**item_lookup, **json['item_lookup']}
+
         older_than_token = json["last_token"]
         if not json["more_available"]:
             break
 
-    return items, item_lookup
+    return items
 
 
 """ collection summary - from https://bandcamp.com/dataist/feed?from=menubar
@@ -49,7 +48,7 @@ def main(args):
             required=True, type=int, help="bandcamp fan_id")
     args = parser.parse_args(args)
    
-    items, purchased_albums = get_collection(args.fan_id, args.cookie) 
+    purchased_albums = get_collection(args.fan_id, args.cookie) 
 
     return purchased_albums
 

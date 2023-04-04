@@ -20,13 +20,13 @@ def collection_helper(fan_id, cookie, output_dir):
            collection = json.load(f)
         return collection
 
-    _, item_lookup = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie)
-    collection = [f"{val['item_type']}{key}" for key, val in item_lookup.items()]
+    data = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie)
+    items = [f"{item['tralbum_type']}{item['tralbum_id']}" for item in data]
 
     with open(filepath, "w") as f:
-        json.dump(collection, f, indent=4)
+        json.dump(items, f, indent=4)
     
-    return collection
+    return items
 
 def chunkify(lst, size):
     """Split a list into equally-sized chunks."""
