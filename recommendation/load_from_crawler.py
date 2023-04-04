@@ -75,7 +75,7 @@ def find_second_order_relationships(sorted_relationships: dict[UserId, dict[User
 
     return second_order_relationships
 
-# need to write test -- although I think it works...
+# need to write test -- although I think it works... -- although seems to get tracks that are also in users collection but this could be album-vs-track
 second_order_relationships = find_second_order_relationships(sorted_relationships=sorted_relationships)
 
 #def print_first_order_suggestions(sorted_relationships):
@@ -97,15 +97,19 @@ def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, se
         all_occurances = []
         for collection in collections.values():
             all_occurances += list(collection)
+
+        all_tracks = set(all_occurances)
+        all_tracks |= USERS[user_id].collection
+
         count: dict[TrackId, int] = {}
-        for track_id in set(all_occurances):
+        for track_id in set(all_tracks):
             total = all_occurances.count(track_id)
             if not total:
                 continue
             count[track_id] = total
         if not count:
             continue
-        track_frequency[user_id] = count
+        track_frequency[user_id] = dict(sorted(count.items(), key=lambda x: x[1], reverse=True))
     return track_frequency
 
 track_frequency = calculate_track_frequency(sorted_relationships=sorted_relationships)
@@ -118,6 +122,7 @@ def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[U
         for collection in collections.values():
             all_occurances += list(collection)
         all_tracks = set(all_occurances)
+        all_tracks |= USERS[user_id].collection
 
         weights: dict[TrackId, float] = {track_id: 0.0 for track_id in all_occurances}
         for tracks in collections.values():
@@ -134,4 +139,6 @@ def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[U
 weighted_track_frequency = calculate_weighted_track_frequency(sorted_relationships)
 
 
+# note -- semetric difference could be interesting -- which tracks aren't you going to like?
 
+# note, probably best to make a NEIGHBOURS table? makes the calculations easier?
