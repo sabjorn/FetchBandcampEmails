@@ -99,7 +99,12 @@ def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, se
             all_occurances += list(collection)
         count: dict[TrackId, int] = {}
         for track_id in set(all_occurances):
-           count[track_id] = all_occurances.count(track_id)
+            total = all_occurances.count(track_id)
+            if not total:
+                continue
+            count[track_id] = total
+        if not count:
+            continue
         track_frequency[user_id] = count
     return track_frequency
 
