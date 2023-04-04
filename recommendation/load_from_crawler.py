@@ -71,7 +71,12 @@ def find_second_order_relationships(sorted_relationships: dict[UserId, dict[User
 
         if not all_friend_collections:
             continue
-        second_order_relationships[user_id] = set.intersection(*all_friend_collections)
+
+        intersection = set.intersection(*all_friend_collections)
+        if not intersection:
+            continue
+        second_order_relationships[user_id] = intersection
+
     return second_order_relationships
 
 second_order_relationships = find_second_order_relationships(sorted_relationships=sorted_relationships)
