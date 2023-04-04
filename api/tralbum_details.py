@@ -4,8 +4,8 @@ from dataclasses import dataclass, asdict
 
 @dataclass
 class TralbumRequestData:
-    band_id: int
     tralbum_id: int
+    band_id: int = 12345
     tralbum_type: str = 't'
 
 
@@ -25,7 +25,7 @@ def get_tralbum_details(tralbum_details: TralbumRequestData):
 # ls_lite', 'has_digital_download', 'num_downloadable_tracks', 'merch_so
 # ld_out', 'streaming_limit'])
 if __name__ == "__main__":
-    tralbum_request_data = TralbumRequestData(band_id=310533014, tralbum_id=310533014)
+    tralbum_request_data = TralbumRequestData(tralbum_id=310533014)
     tralbum_details = get_tralbum_details(tralbum_request_data)
 
     print(tralbum_details)
