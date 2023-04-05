@@ -112,7 +112,7 @@ def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, se
         track_frequency[user_id] = dict(sorted(count.items(), key=lambda x: x[1], reverse=True))
     return track_frequency
 
-track_frequency = calculate_track_frequency(sorted_relationships=sorted_relationships)
+#track_frequency = calculate_track_frequency(sorted_relationships=sorted_relationships)
 
 def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, float]]:
     # calculates a normalized frequency by multiplying every occurance of that track in a collection by the count of tracks shared in that collection 
@@ -136,9 +136,10 @@ def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[U
         weighted_track_frequency[user_id] = dict(sorted(weights.items(), key=lambda x: x[1], reverse=True))
     return weighted_track_frequency
 
-weighted_track_frequency = calculate_weighted_track_frequency(sorted_relationships)
+#weighted_track_frequency = calculate_weighted_track_frequency(sorted_relationships)
 
 
 # note -- semetric difference could be interesting -- which tracks aren't you going to like?
 
 # note, probably best to make a NEIGHBOURS table? makes the calculations easier?
+# track_frequency and weighted_tarck_frequency still have USER's own tracks in so not great for suggestions... currently -- or was that my point?
