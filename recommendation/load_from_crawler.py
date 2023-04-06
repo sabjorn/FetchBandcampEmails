@@ -92,17 +92,18 @@ second_order_relationships = find_second_order_relationships(sorted_relationship
 #print_first_order_suggestions(sorted_relationships=sorted_relationships)
 
 def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, int]]:
+    ''' calculates how often tracks occur in all users' collections that have at least 1 track overlap in collection '''
     track_frequency: dict[UserId, dict[TrackId, int]] = {}
     for user_id, collections in sorted_relationships.items():
         all_occurances = []
-        for collection in collections.values():
-            all_occurances += list(collection)
+        for friend_id in collections:
+            all_occurances += list(USERS[friend_id].collection)
 
         all_tracks = set(all_occurances)
         all_tracks |= USERS[user_id].collection
 
         count: dict[TrackId, int] = {}
-        for track_id in set(all_tracks):
+        for track_id in all_tracks:
             total = all_occurances.count(track_id)
             if not total:
                 continue
