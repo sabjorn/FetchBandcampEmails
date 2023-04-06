@@ -64,7 +64,7 @@ def find_second_order_relationships(sorted_relationships: dict[UserId, dict[User
     for user_id, collections in sorted_relationships.items():
         friends = list(collections)[:rank] if rank else list(collections) # order is important
         
-        friends_collections = [USERS[friend_id].collection for friend_id in friends]
+        friends_collections = [USERS[friend_id].collection | USERS[user_id].collection for friend_id in friends]
         if not friends_collections:
             continue
 
