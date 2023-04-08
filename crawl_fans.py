@@ -1,14 +1,18 @@
 import collections
 import sys
 import os
-import requests
 import argparse
 import logging
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import json
 
 from api import get_bandcamp_collection, collected_by
+
+
+COOKIES = [None] # make a cookie pool
 
 # get own collection, save to disc as json
 # for each track in collection, find who owns and make list dict[UserId, TrackId], save to disk
@@ -19,9 +23,21 @@ def collection_helper(fan_id, cookie, output_dir):
         with open(filepath, "r") as f:
            collection = json.load(f)
         return collection
-
-    data = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie)
+     
+    session = requests.Session()
+    retry = Retry(connect=3, backoff_factor=1)
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('https://', adapter)
+    
+    data = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie, session=session)
     items = [f"{item['tralbum_type']}{item['tralbum_id']}" for item in data]
+
+    ## get date/time of purchase data[0]['purchased']
+    # times = {}
+    # for item in data:
+    #     tralbum_id = f"{item['tralbum_type']}{item['tralbum_id']}"
+    #     purchased = item['purchased']
+    #     times[tralbum_id] = datetime.strptime(purchased, "%d %b %Y %H:%M:%S %Z")
 
     with open(filepath, "w") as f:
         json.dump(items, f, indent=4)

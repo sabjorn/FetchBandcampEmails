@@ -4,10 +4,11 @@ import argparse
 import time
 
 import logging
-logger = logging.getLogger()
-# todo: bug -- pagnation doesn't work correctly and creates too many
-# likely older_than_token not working properly...
-def get_collection(fan_id, cookie, older_than=None):
+
+def get_collection(fan_id, cookie, older_than=None, session=None):
+    if not session:
+        session = requests
+
     if not older_than:
         older_than = int(time.time())
     older_than_token = f'{older_than}:000000000:a::'
@@ -19,16 +20,11 @@ def get_collection(fan_id, cookie, older_than=None):
 
     items = []
     while True:
-        data = {'fan_id':f'{fan_id}', 'older_than_token': older_than_token,'count':20}
-        r = requests.post(url, headers=headers, json=data)
-
-        if r.status_code == 429:
-            logger.error("get_collection rate limited, attempting again in 5 seconds")
-            time.sleep(5)
-            continue
+        data = {'fan_id':f'{fan_id}', 'older_than_token': older_than_token}
+        r = session.post(url, headers=headers, json=data)
 
         if r.status_code != 200:
-            logger.error("get_collection failed", r.status_code, r.reason)
+            logging.error("get_collection failed", r.status_code, r.reason)
             break
 
         json = r.json()
@@ -38,6 +34,7 @@ def get_collection(fan_id, cookie, older_than=None):
         older_than_token = json["last_token"]
         if not json["more_available"]:
             break
+        break
 
     return items
 
@@ -53,9 +50,9 @@ def main(args):
             required=True, type=int, help="bandcamp fan_id")
     args = parser.parse_args(args)
    
-    purchased_albums = get_collection(args.fan_id, args.cookie) 
+    collection_items = get_collection(args.fan_id, args.cookie) 
 
-    return purchased_albums
+    return collection_items
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    collection_items = main(sys.argv[1:])
