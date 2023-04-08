@@ -27,7 +27,7 @@ def collection_helper(fan_id, output_dir):
         return collection
      
     s = requests.Session()
-    retry = Retry(connect=3, backoff_factor=1)
+    retry = Retry(connect=3, backoff_factor=1, status_forcelist=Retry.RETRY_AFTER_STATUS_CODES)
     adapter = HTTPAdapter(max_retries=retry)
     s.mount('https://', adapter)
     s.headers.update(HEADERS);
