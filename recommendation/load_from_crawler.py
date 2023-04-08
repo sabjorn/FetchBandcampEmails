@@ -171,3 +171,10 @@ for i, (track_id, count) in enumerate(track_popularity.items()):
         break
     print(track_id, count)
 
+
+def calculate_user_bias(user_id) -> dict[UserId, float]:
+    user_bias: dict[UserId, float] = {}
+    for friend_id, overlap in sorted_relationships[user_id].items():
+        user_bias[friend_id] = len(overlap) / len(USERS[user_id].collection)
+    return user_bias
+USER_BIAS = calculate_user_bias(user_id)
