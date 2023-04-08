@@ -179,7 +179,7 @@ def calculate_user_bias(user_id) -> dict[UserId, float]:
     return user_bias
 USER_BIAS = calculate_user_bias(user_id)
 
-# soooo expensive
+# soooo expensive - could re-write to just iterate over 'track_popularity.keys()' instead?
 bias_popularity: dict[TrackId, float] = {} 
 friends = sorted_relationships[user_id]
 for track_id in track_popularity:
@@ -197,4 +197,5 @@ for i, (track_id, count) in enumerate(bias_popularity.items()):
         break
     print(track_id, count)
 
-
+# if only the TRACKS.owners could be pre-bias... then could just sum those bias
+# this would require a TRACKS.owners for each USER... but would only include 'frineds'...
