@@ -10,7 +10,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import json
 
-from api import get_bandcamp_collection, collected_by
+from api import get_bandcamp_collection, collected_by 
+from api.headers import HEADERS
 
 
 COOKIES = [None] # make a cookie pool
@@ -25,18 +26,19 @@ def collection_helper(fan_id, cookie, output_dir):
            collection = json.load(f)
         return collection
      
-    session = requests.Session()
+    s = requests.Session()
     retry = Retry(connect=3, backoff_factor=1)
     adapter = HTTPAdapter(max_retries=retry)
-    session.mount('https://', adapter)
+    s.mount('https://', adapter)
+    s.headers.update(HEADERS);
     
     cookie = choice(COOKIES)
     if not cookie:
-        session.get('https://bandcamp.com')
-        cookie = session.cookies.get('client_id')
+        s.get('https://bandcamp.com')
+        cookie = s.cookies.get('client_id')
         COOKIES.append(cookie)
         
-    data = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie, session=session)
+    data = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie, session=s)
     items = [f"{item['tralbum_type']}{item['tralbum_id']}" for item in data]
 
     ## get date/time of purchase data[0]['purchased']
