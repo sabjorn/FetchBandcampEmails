@@ -178,3 +178,23 @@ def calculate_user_bias(user_id) -> dict[UserId, float]:
         user_bias[friend_id] = len(overlap) / len(USERS[user_id].collection)
     return user_bias
 USER_BIAS = calculate_user_bias(user_id)
+
+# soooo expensive
+bias_popularity: dict[TrackId, float] = {} 
+friends = sorted_relationships[user_id]
+for track_id in track_popularity:
+    bias_total = 0.0
+    for friend_id, collection in friends.items():
+        if track_id not in collection:
+            continue
+        bias_total += USER_BIAS[friend_id]
+    bias_popularity[track_id] = bias_total
+bias_popularity =  dict(sorted(bias_popularity.items(), key=lambda x: x[1], reverse=True))
+
+
+for i, (track_id, count) in enumerate(bias_popularity.items()):
+    if i > 10:
+        break
+    print(track_id, count)
+
+
