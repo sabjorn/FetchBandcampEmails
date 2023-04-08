@@ -146,8 +146,8 @@ def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[U
 # note, probably best to make a NEIGHBOURS table? makes the calculations easier?
 # track_frequency and weighted_tarck_frequency still have USER's own tracks in so not great for suggestions... currently -- or was that my point?
 
-
-def calculate_track_popularity_list(user_id):
+# this is just a better implementation of track_frequency
+def calculate_track_popularity_list(user_id) -> dict[TrackId, int]:
     ''' generates a list of all tracks that your friends own and the count from overlap in collections '''
     track_popularity = {}
     friends = set(sorted_relationships[user_id].keys())
