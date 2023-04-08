@@ -174,8 +174,8 @@ if __name__ == '__main__':
                       data=album_art.getvalue()
                     ))
 
-        pruchase_data = asdict(d.purchase_data)
-        audio.tags.add(COMM(encoding=3, desc='', lang='XXX', text=[json.dumps(purchase_data)]))
+        json_meta = json.dumps(asdict(d.purchase_data))
+        audio.tags.add(COMM(encoding=3, desc='', lang='XXX', text=[json_meta]))
 
         audio.save(audio_buffer)
    
