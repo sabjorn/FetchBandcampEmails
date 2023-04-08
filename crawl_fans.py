@@ -3,6 +3,7 @@ import sys
 import os
 import argparse
 import logging
+from random import choice
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -29,6 +30,12 @@ def collection_helper(fan_id, cookie, output_dir):
     adapter = HTTPAdapter(max_retries=retry)
     session.mount('https://', adapter)
     
+    cookie = choice(COOKIES)
+    if not cookie:
+        session.get('https://bandcamp.com')
+        cookie = session.cookies.get('client_id')
+        COOKIES.append(cookie)
+        
     data = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie, session=session)
     items = [f"{item['tralbum_type']}{item['tralbum_id']}" for item in data]
 
