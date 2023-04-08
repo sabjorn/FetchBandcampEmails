@@ -19,7 +19,7 @@ COOKIES = [None] # make a cookie pool
 # get own collection, save to disc as json
 # for each track in collection, find who owns and make list dict[UserId, TrackId], save to disk
 # for each user, get collection
-def collection_helper(fan_id, cookie, output_dir):
+def collection_helper(fan_id, output_dir):
     filepath = os.path.join(output_dir, f"{fan_id}.json")
     if os.path.exists(filepath):
         with open(filepath, "r") as f:
@@ -67,21 +67,26 @@ def main(args):
     logger.setLevel(logging.INFO)
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--cookie",
-            required=True, type=str, help="bandcamp session token")
     parser.add_argument("-f", "--fan_id", 
             required=True, type=str, help="user id of starting user's collection")
     parser.add_argument("-d", "--output_dir", type=str, default="./")
     args = parser.parse_args(args)
     
     logger.info("grabbing first collection")  
-    primary_collection = collection_helper(args.fan_id, args.cookie, args.output_dir)
+    primary_collection = collection_helper(args.fan_id, args.output_dir)
 
     logger.info("collecting track owners")  
     track_owners = {}
     collection_chunks = chunkify(primary_collection, 100)
     for chunk in collection_chunks:
-        collectors = collected_by.get_collected_by(chunk, args.cookie)
+        cookie = choice(COOKIES)
+        if not cookie: # repeate -- factor out
+            s = requests.Session()
+            s.get('https://bandcamp.com')
+            cookie = s.cookies.get('client_id')
+            COOKIES.append(cookie)
+
+        collectors = collected_by.get_collected_by(chunk, cookie)
         for key, val in collectors.items():
             track_owners[key] = set([item['fan_id'] for item in val['thumbs']])
 
@@ -91,7 +96,7 @@ def main(args):
     
     for user in user_list:
         logger.info(f"getting collection for {user}")
-        collection_helper(user, args.cookie, args.output_dir)
+        collection_helper(user, args.output_dir)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
