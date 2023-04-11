@@ -20,7 +20,7 @@ def get_collection(fan_id, cookie, older_than=None, session=None):
 
     items = []
     while True:
-        data = {'fan_id':f'{fan_id}', 'older_than_token': older_than_token}
+        data = {'fan_id':f'{fan_id}', 'older_than_token': older_than_token, 'count': 20}
         r = session.post(url, headers=headers, json=data)
 
         if r.status_code != 200:
@@ -33,8 +33,8 @@ def get_collection(fan_id, cookie, older_than=None, session=None):
 
         older_than_token = json["last_token"]
         if not json["more_available"]:
+            logging.debug(f"no more available: {json['more_available']}")
             break
-        break
 
     return items
 
