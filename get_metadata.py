@@ -22,6 +22,9 @@ class BCPurchase:
     currency: str
     tralbum_type: str # = 't'
     track_url: str
+
+    def __hash__(self):
+        return self.track_id
     
 
 def parse_bandcamp_data(text: str) -> list[TralbumRequestData]:
