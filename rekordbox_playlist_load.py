@@ -65,7 +65,10 @@ def main(args):
     removed_keys = set(purchase_tralbum.keys()) - keys_to_purchase  
     for key in removed_keys:
         logging.info(f"removed tracks: {key} because it was in collection.")
+        
 
+    logging.info(f"number of tracks to download: {len(keys_to_purchase)}")
+    tracks_downloaded_count = 0
     cart_data = {}
     for i, key in enumerate(keys_to_purchase):
         track_id = purchase_tralbum[key].track_id
@@ -80,6 +83,12 @@ def main(args):
             count += 1
             sleep(1)
             if count > 10: break
+        tracks_downloaded_count += 1
+
+    logging.info(f"current cart length: {len(cart_data['cart_data']['items'])}")
+    logging.info(f"number of tracks downloaded: {tracks_downloaded_count}")
+    if tracks_downloaded_count != len(keys_to_purchase):
+        logging.error("not all tracks downloaded")
 
     #cart_items = cart_data['cart_data']['items']
     #cart_items = [item['id'] for item in cart_items]
