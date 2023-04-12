@@ -27,6 +27,7 @@ def main(args):
     parser.add_argument('-u', '--user_id', type=str, required=True)  
     parser.add_argument('-d', '--client_id', type=str, required=True)  
     parser.add_argument('-s', '--skip', action='store_true', help="skip checking if track already exists in library")
+    parser.add_argument('-f', '--dry', action='store_true', help="skip adding to cart")
 
     args = parser.parse_args()
 
@@ -68,6 +69,9 @@ def main(args):
         
 
     logging.info(f"number of tracks to download: {len(keys_to_purchase)}")
+    if args.dry:
+        return {}
+
     tracks_downloaded_count = 0
     cart_data = {}
     for i, key in enumerate(keys_to_purchase):
@@ -90,9 +94,6 @@ def main(args):
     if tracks_downloaded_count != len(keys_to_purchase):
         logging.error("not all tracks downloaded")
 
-    #cart_items = cart_data['cart_data']['items']
-    #cart_items = [item['id'] for item in cart_items]
-    
     return cart_data 
 
 
