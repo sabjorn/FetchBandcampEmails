@@ -1,8 +1,10 @@
+import enum
 from os import remove
 import sys
 import logging
 import argparse
 import csv
+from time import sleep
 
 import json
 
@@ -24,6 +26,7 @@ def main(args):
     parser.add_argument('-i', '--input', nargs='+', help='Provide list of urls to process', required=True)
     parser.add_argument('-u', '--user_id', type=str, required=True)  
     parser.add_argument('-d', '--client_id', type=str, required=True)  
+    parser.add_argument('-s', '--skip', action='store_true', help="skip checking if track already exists in library")
 
     args = parser.parse_args()
 
@@ -48,7 +51,10 @@ def main(args):
     s.get('https://bandcamp.com')
     cookie = s.cookies.get('client_id')
 
-    collection = get_collection(fan_id=args.user_id, cookie=cookie, session=s)
+    collection = [] 
+    if not args.skip:
+        collection = get_collection(fan_id=args.user_id, cookie=cookie, session=s)
+
     logger.debug(f"collection length: {len(collection)}");
     collection_tralbum_keys = {f"{t['item_type'][0]}{t['item_id']}" for t in collection}
   
@@ -61,17 +67,24 @@ def main(args):
         logging.info(f"removed tracks: {key} because it was in collection.")
 
     cart_data = {}
-    for key in keys_to_purchase:
+    for i, key in enumerate(keys_to_purchase):
         track_id = purchase_tralbum[key].track_id
         unit_price = purchase_tralbum[key].unit_price if purchase_tralbum[key].unit_price > 0.0 else 1.0
         
         logger.info(f"adding {track_id} to cart")
-        cart_data = add_to_cart(client_id=args.client_id, cookie=cookie, track_id=track_id, unit_price=unit_price)
+        
+        cart_data = {}
+        count = 0
+        while not cart_data.get('cart_data'):
+            cart_data = add_to_cart(client_id=args.client_id, cookie=cookie, track_id=track_id, unit_price=unit_price)
+            count += 1
+            sleep(1)
+            if count > 10: break
 
-    cart_items = cart_data['cart_data']['items']
-    cart_items = [item['id'] for item in cart_items]
+    #cart_items = cart_data['cart_data']['items']
+    #cart_items = [item['id'] for item in cart_items]
     
-    return cart_items
+    return cart_data 
 
 
 if __name__ == "__main__":
