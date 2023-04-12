@@ -119,7 +119,7 @@ if __name__ == '__main__':
             'track_id': track['track_id'],
             'unit_price': track['price'],
             'currency': track['currency'],
-            'tralbum_type': track['album_id'],
+            'tralbum_type': 't',
             'track_url': track_detail['bandcamp_url'],
         }
         data = {
