@@ -1,3 +1,5 @@
+from os import remove
+import sys
 import logging
 import argparse
 import csv
@@ -10,9 +12,9 @@ from urllib3.util.retry import Retry
 
 from get_metadata import BCPurchase
 from api.get_bandcamp_collection import get_collection
+from api.add_to_cart import add_to_cart
 
-
-if __name__ == "__main__":
+def main(args):
     logger = logging.getLogger()
     handler = logging.StreamHandler()
     logger.addHandler(handler)
@@ -21,6 +23,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Loads Rekordbox txt playlist exports and pulls metadata from comments")
     parser.add_argument('-i', '--input', nargs='+', help='Provide list of urls to process', required=True)
     parser.add_argument('-u', '--user_id', type=str, required=True)  
+    parser.add_argument('-d', '--client_id', type=str, required=True)  
 
     args = parser.parse_args()
 
@@ -47,18 +50,29 @@ if __name__ == "__main__":
 
     collection = get_collection(fan_id=args.user_id, cookie=cookie, session=s)
     logger.debug(f"collection length: {len(collection)}");
-    
-    # check against collection 
     collection_tralbum_keys = {f"{t['item_type'][0]}{t['item_id']}" for t in collection}
-   
-    # make this a set and subtract collection_tralbum_keys
-    for t in tracks_to_purchase:
-        tralbum_id = f"{t.tralbum_type}{t.track_id}"
-        if tralbum_id in collection_tralbum_keys:
-            logger.info(tralbum_id)
-            logger.info(t)
+  
+    purchase_tralbum = {f"t{t.track_id}": t for t in tracks_to_purchase}
+
+    keys_to_purchase = set(purchase_tralbum.keys()) - collection_tralbum_keys
+
+    removed_keys = set(purchase_tralbum.keys()) - keys_to_purchase  
+    for key in removed_keys:
+        logging.info(f"removed tracks: {key} because it was in collection.")
+
+    cart_data = {}
+    for key in keys_to_purchase:
+        track_id = purchase_tralbum[key].track_id
+        unit_price = purchase_tralbum[key].unit_price if purchase_tralbum[key].unit_price > 0.0 else 1.0
+        
+        logger.info(f"adding {track_id} to cart")
+        cart_data = add_to_cart(client_id=args.client_id, cookie=cookie, track_id=track_id, unit_price=unit_price)
+
+    cart_items = cart_data['cart_data']['items']
+    cart_items = [item['id'] for item in cart_items]
+    
+    return cart_items
 
 
-    # find zero cost items and add value
-
-    # add to cart
+if __name__ == "__main__":
+    cart_items = main(sys.argv[1:]) 
