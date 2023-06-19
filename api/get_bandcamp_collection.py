@@ -2,10 +2,11 @@ import sys
 import requests
 import argparse
 import time
-
+from datetime import datetime
+from dateutil import parser
 import logging
 
-def get_collection(fan_id, cookie, older_than=None, session=None):
+def get_collection(fan_id: int, cookie: str, older_than:int | None=None, newer_than: datetime | None=None, session=None):
     if not session:
         session = requests
 
@@ -28,12 +29,26 @@ def get_collection(fan_id, cookie, older_than=None, session=None):
             break
 
         json = r.json()
-        
+
         items += json["items"]
 
         older_than_token = json["last_token"]
         if not json["more_available"]:
             logging.debug(f"no more available: {json['more_available']}")
+            break
+
+        if not newer_than:
+            continue
+
+        newer_than_found = False
+        for item in json["items"]:
+            added = parser.parse(item['added'])
+            if added > newer_than:
+                continue
+            items.remove(item)
+            newer_than_found = True
+        
+        if newer_than_found:
             break
 
     return items
