@@ -4,6 +4,7 @@ import os
 import argparse
 import logging
 from random import choice
+import datetime
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -20,11 +21,14 @@ COOKIES = [None] # make a cookie pool
 # for each track in collection, find who owns and make list dict[UserId, TrackId], save to disk
 # for each user, get collection
 def collection_helper(fan_id, output_dir):
+    items = []
+    newer_than = None
     filepath = os.path.join(output_dir, f"{fan_id}.json")
     if os.path.exists(filepath):
+        newer_than_unixtime = os.path.getmtime(filepath)
+        newer_than = datetime.datetime.fromtimestamp(newer_than_unixtime).astimezone()
         with open(filepath, "r") as f:
-           collection = json.load(f)
-        return collection
+           items = json.load(f)
      
     s = requests.Session()
     retry = Retry(total=5, connect=3, backoff_factor=5, status_forcelist=[429])
@@ -38,8 +42,9 @@ def collection_helper(fan_id, output_dir):
         cookie = s.cookies.get('client_id')
         COOKIES.append(cookie)
         
-    data = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie, session=s)
-    items = [f"{item['tralbum_type']}{item['tralbum_id']}" for item in data]
+    data = get_bandcamp_collection.get_collection(fan_id=fan_id, cookie=cookie, newer_than=newer_than, session=s)
+    items += [f"{item['tralbum_type']}{item['tralbum_id']}" for item in data]
+    items = list(set(items))
 
     ## get date/time of purchase data[0]['purchased']
     # times = {}
