@@ -31,7 +31,7 @@ def collection_helper(fan_id, output_dir):
            items = json.load(f)
      
     s = requests.Session()
-    retry = Retry(total=5, connect=3, backoff_factor=5, status_forcelist=[429])
+    retry = Retry(total=5, connect=3, backoff_factor=10, allowed_methods=['POST'], status_forcelist=[429])
     adapter = HTTPAdapter(max_retries=retry)
     s.mount('https://', adapter)
     s.headers.update(HEADERS);
