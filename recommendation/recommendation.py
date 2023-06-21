@@ -1,132 +1,48 @@
+import argparse
+import logging
 import sys
+
 from models import Id, Track, User, UserId, TrackId
+from relationships import Relationships
 
-def test_track():
-    s = {Track(1), Track(2), Track(1)}
-    assert s == {Track(1), Track(2)}
-    assert len(s) == 2
-
-test_track()
-
-def collection_factory(count: int) -> dict[TrackId, Track]:
-    collection = {}
-    for i in range(count):
-        track = Track(TrackId(i))
-        collection[track.id] = track
-    return collection
+USERS: dict[UserId, User] = {}
+TRACKS: dict[TrackId, Track] = {}
 
 
-def users_factory(tracks: dict[TrackId, Track], num_users: int, overlap: float = 0.5) -> dict[UserId, User]:
-    offset = 0
-    tracks_per_user = len(tracks) // num_users
-    step = tracks_per_user - int(overlap * tracks_per_user)
-    users = {}
-    for i in range(num_users):
-        user = User(i)
-        for i in range(0, tracks_per_user):
-            track_id = TrackId(i + offset)
-            user.collection.add(track_id)
-            tracks[track_id].owners.add(user._id)
-        users[user._id] = user
-        offset += step
-    return users
+def recommend_tracks(args):
+    path = "/Users/sabjorn/Dropbox/tmp/bes/crawler_data"
+    relationships = Relationships(path)
+
+    USERS = relationships.users
+    TRACKS = relationships.tracks
 
 
-master_collection = collection_factory(100)
-users = users_factory(tracks=master_collection, num_users=10, overlap = .9)
-
-# find overlap between 'friend' collection and own, rank that user based on number of overlaps
-def find_sorted_relationships(tracks: dict[TrackId, Track], users: dict[UserId, User]) -> dict[UserId, dict[UserId, set[TrackId]]]:
-    sorted_relationships = {}
-    for user_id, user in users.items():
-        for track in user.collection:
-            friends = master_collection[TrackId(track.id)].owners.copy()
-            friends.remove(user.id)
-            matched: dict[UserId, set[TrackId]] = {}
-            for friend_id in friends:
-                overlap = users[friend_id].collection.intersection(user.collection)
-                matched[friend_id] = overlap
-            sorted_relationships[user_id] = dict(sorted(matched.items(), key=lambda x: len(x[1]), reverse=True))
-    return sorted_relationships
 
 
-sorted_relationships = find_sorted_relationships(master_collection, users)
-print("sorted_relationships")
-for user, friends in sorted_relationships.items():
-    print(f"user: {user}")
-    for friend_id, collection in friends.items():
-        print(f"friend:\t{friend_id}: count: {len(collection)}") 
+def main(argv):
+    parser = argparse.ArgumentParser(description='Bandcamp Recommendation Engine')
+    subparsers = parser.add_subparsers(help='Commands')
 
-# note -- users_factory is not very useful since it doesn't actually model overlap between different users well...
+    parser_0 = subparsers.add_parser('tracks', help='Provide a track ID to get recommendations')
+    parser_0.add_argument('track_id', type=str,
+                           help='Bandcamp track_id')
+    parser_0.add_argument('-n', dest='track_count', required=False, default=4, type=int,
+                           help='Number of tracks returned, DEFAULT=1')
+    parser_0.set_defaults(func=recommend_tracks)
 
-def print_first_order_suggestions(sorted_relationships):
-    print("first order suggestions")
-    for user_id, collections in sorted_relationships.items():
-        print(f"User: {user_id}")
-        keys = list(collections)
-        if not keys:
-            continue
-        first_key = keys[0]
-        collection = collections[first_key]
-        print(f"tracks: {collection}")
+    #parser_1 = subparsers.add_parser('function2', help='Running func2...')
+    #parser_1.add_argument('-time', required=False, dest='time', default=None, action='store',
+    #                       help='Time in minutes. DEFAULT=No time set.')
+    #parser_1.set_defaults(func=function2)
 
-print_first_order_suggestions(sorted_relationships=sorted_relationships)
+    args = parser.parse_args()
 
-# the tracks that overlap between the largest number of relationships
-def find_second_order_relationships(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]], rank: int | None = None) -> dict[UserId, set[TrackId]]:
-    second_order_relationships: dict[UserId, set[TrackId]] = {}
-    for user_id, collections in sorted_relationships.items():
-        all_friend_collections = collections.values()
-
-        if rank and rank < len(collections): # how many users to consider
-            sliced_keys = [*collections.keys()][:rank]
-            sliced_dict = {i: collections[i] for i in sliced_keys}
-            all_friend_collections = sliced_dict.values() 
-
-        if not all_friend_collections:
-            continue
-        second_order_relationships[user_id] = set.intersection(*all_friend_collections)
-    return second_order_relationships
-
-second_order_relationships = find_second_order_relationships(sorted_relationships=sorted_relationships)
-print(second_order_relationships)
-
-def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, int]]:
-    track_frequency: dict[UserId, dict[TrackId, int]] = {}
-    for user_id, collections in sorted_relationships.items():
-        all_occurances = []
-        for collection in collections.values():
-            all_occurances += list(collection)
-        count: dict[TrackId, int] = {}
-        for track_id in set(all_occurances):
-           count[track_id] = all_occurances.count(track_id)
-        track_frequency[user_id] = count
-    return track_frequency
-
-track_frequency = calculate_track_frequency(sorted_relationships=sorted_relationships)
-print(track_frequency)
-
-def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, float]]:
-    # calculates a normalized frequency by multiplying every occurance of that track in a collection by the count of tracks shared in that collection 
-    weighted_track_frequency: dict[UserId, dict[TrackId, float]] = {}
-    for user_id, collections in sorted_relationships.items():
-        all_occurances = []
-        for collection in collections.values():
-            all_occurances += list(collection)
-        all_tracks = set(all_occurances)
-
-        weights: dict[TrackId, float] = {track_id: 0.0 for track_id in all_occurances}
-        for tracks in collections.values():
-            weight = len(tracks) 
-            for track_id in tracks:
-                weights[track_id] += weight
-
-        maximum_value = max(weights.values()) if weights.values() else 1.0
-        weights = {track_id: (weight / maximum_value) for track_id, weight in weights.items()}
-
-        weighted_track_frequency[user_id] = dict(sorted(weights.items(), key=lambda x: x[1], reverse=True))
-    return weighted_track_frequency
-
-weighted_track_frequency = calculate_weighted_track_frequency(sorted_relationships)
-print(weighted_track_frequency)
+    if not hasattr(args, 'func'):
+        logging.error('no command found')
+        return
     
+    args.func(args)
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main(sys.argv[1:])

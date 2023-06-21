@@ -3,6 +3,7 @@ from glob import iglob
 import logging
 import json
 
+from relationships import Relationships
 from models import Id, Track, User, UserId, TrackId
 
 logging.basicConfig(level=logging.INFO)
@@ -11,31 +12,9 @@ USERS: dict[UserId, User] = {}
 TRACKS: dict[TrackId, Track] = {}
 
 PATH = "/Users/sabjorn/Dropbox/tmp/bes/crawler_data"
-# iterate through json files and load them
-for full_path in iglob(os.path.join(PATH, "*.json")):
-    _, file = os.path.split(full_path)
-    user_id = int(file.split(".json")[0])
-
-    if user_id not in USERS:
-        logging.debug(f"creating User with user_id: {user_id}")
-        USERS[user_id] = User(user_id) 
-
-    logging.debug(f"loading user_id: {user_id} tracks")
-    with open(full_path, "r") as f:
-        raw_collection = json.load(f)
-
-    for item in raw_collection:
-        # skip albums for now
-        if "a" in item:
-            continue
-        track_id = int(item[1:])
-        
-        # add track_id to TRACKS
-        if track_id not in TRACKS:
-            TRACKS[track_id] = Track(track_id)
-
-        TRACKS[track_id].owners.add(user_id)
-        USERS[user_id].collection.add(track_id)
+relationships = Relationships(PATH)
+USERS = relationships.users
+TRACKS = relationships.tracks
 
 logging.info(f"USERS, total count {len(USERS)}")
 logging.info(f"TRACKS, total count: {len(TRACKS)}")

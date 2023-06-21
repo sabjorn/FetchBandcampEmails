@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     track_details = [get_tralbum_details(track) for track in tracks]
 
-    make this remove existing collection
+#    make this remove existing collection
     
     @dataclass
     class BCMetadata:
