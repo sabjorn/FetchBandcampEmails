@@ -19,8 +19,11 @@ TRACKS = relationships.tracks
 logging.info(f"USERS, total count {len(USERS)}")
 logging.info(f"TRACKS, total count: {len(TRACKS)}")
 
-# find overlap between 'friend' collection and own, rank that user based on number of overlaps
+
 def find_sorted_relationships() -> dict[UserId, dict[UserId, set[TrackId]]]:
+    ''' find overlap between 'friends' collection and own;
+        rank friends based on number of overlaps
+    '''
     sorted_relationships = {}
     for user_id in USERS:
         friends: set[UserId] = set()
@@ -96,7 +99,10 @@ def calculate_track_frequency(sorted_relationships: dict[UserId, dict[UserId, se
 #track_frequency = calculate_track_frequency(sorted_relationships=sorted_relationships)
 
 def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]]) -> dict[UserId, dict[TrackId, float]]:
-    # calculates a normalized frequency by multiplying every occurance of that track in a collection by the count of tracks shared in that collection 
+    ''' calculates a normalized frequency by multiplying every 
+        occurance of that track in a collection by the count of 
+        tracks shared in that collection
+    '''
     weighted_track_frequency: dict[UserId, dict[TrackId, float]] = {}
     for user_id, collections in sorted_relationships.items():
         all_occurances = []
@@ -127,7 +133,9 @@ def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[U
 
 # this is just a better implementation of track_frequency
 def calculate_track_popularity_list(user_id) -> dict[TrackId, int]:
-    ''' generates a list of all tracks that your friends own and the count from overlap in collections '''
+    ''' generates a list of all tracks that your friends own and 
+        the count from overlap in collections
+    '''
     track_popularity = {}
     friends = set(sorted_relationships[user_id].keys())
     for friend_id in friends:
