@@ -4,6 +4,9 @@ import sys
 
 from models import Id, Track, User, UserId, TrackId
 from relationships import Relationships
+from utilities import find_weighted_track_similarity
+
+import time
 
 USERS: dict[UserId, User] = {}
 TRACKS: dict[TrackId, Track] = {}
@@ -16,6 +19,7 @@ def recommend_tracks(args):
     USERS = relationships.users
     TRACKS = relationships.tracks
 
+    sorted_similarity = find_weighted_track_similarity(args.track_id)
 
 
 
