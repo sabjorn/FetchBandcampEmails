@@ -25,10 +25,10 @@ def recommend_tracks(args: dict[str, Any]):
     track_count = args.get("recommendation_count")
     sorted_similarity = find_weighted_track_similarity(track_ids=track_ids, count=track_count)
 
-    for track in sorted_similarity:
+    for track, count in sorted_similarity.items():
         track_request_data = TralbumRequestData(tralbum_id=track.id)
         tralbum_details = get_tralbum_details(track_request_data)
-        logging.info(f"{tralbum_details.get('title')}: {tralbum_details.get('bandcamp_url')}")
+        logging.info(f"count: {count} -- {tralbum_details.get('title')}: {tralbum_details.get('bandcamp_url')}")
 
 
 def main(argv):

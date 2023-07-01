@@ -13,8 +13,7 @@ def find_weighted_track_similarity(track_ids: set[TrackId], count: int | None = 
     TRACKS = relationships.tracks
 
     collected = []
-    while track_ids:
-        track_id = track_ids.pop()
+    for track_id in track_ids:
         logging.info(track_id)
         track = TRACKS.get(track_id)
         if not track:
@@ -23,6 +22,7 @@ def find_weighted_track_similarity(track_ids: set[TrackId], count: int | None = 
 
         for owners in track.owners:
             collection = USERS[owners].collection
+            collection -= track_ids
             collected += collection
 
     sorted_similarity: dict[TrackId, float] = dict(collections.Counter(collected).most_common(count))
