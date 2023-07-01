@@ -10,7 +10,6 @@ class TralbumRequestData:
 
 
 def get_tralbum_details(tralbum_details: TralbumRequestData):
-
     url = "https://bandcamp.com/api/mobile/25/tralbum_details"
 
     response = requests.request("POST", url, json=asdict(tralbum_details))

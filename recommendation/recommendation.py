@@ -8,6 +8,8 @@ from models import Id, Track, User, UserId, TrackId
 from relationships import Relationships
 from utilities import find_weighted_track_similarity
 
+sys.path.append("..")
+from api.tralbum_details import TralbumRequestData, get_tralbum_details
 
 USERS: dict[UserId, User] = {}
 TRACKS: dict[TrackId, Track] = {}
@@ -22,8 +24,11 @@ def recommend_tracks(args: dict[str, Any]):
     track_ids = set(track_ids)
     track_count = args.get("recommendation_count")
     sorted_similarity = find_weighted_track_similarity(track_ids=track_ids, count=track_count)
-    
-    logging.info(sorted_similarity)
+
+    for track in sorted_similarity:
+        track_request_data = TralbumRequestData(tralbum_id=track.id)
+        tralbum_details = get_tralbum_details(track_request_data)
+        logging.info(f"{tralbum_details.get('title')}: {tralbum_details.get('bandcamp_url')}")
 
 
 def main(argv):
