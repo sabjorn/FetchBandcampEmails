@@ -20,8 +20,9 @@ def recommend_tracks(args: dict[str, Any]):
 
     track_ids = set(track_ids)
     track_count = args.get("recommendation_count")
+    user_id = args.get("user_id")
     r = Relationships()
-    sorted_similarity = find_weighted_track_similarity(relationships=r, track_ids=track_ids, count=track_count)
+    sorted_similarity = find_weighted_track_similarity(relationships=r, track_ids=track_ids, count=track_count, user_id=user_id)
 
     for track, count in sorted_similarity.items():
         track_request_data = TralbumRequestData(tralbum_id=track.id)
@@ -40,6 +41,8 @@ def main(argv):
                            help='Bandcamp track_ids')
     parser_0.add_argument('-n', dest='recommendation_count', required=False, default=4, type=int,
                            help='Number of recommendated tracks returned, DEFAULT=1')
+    parser_0.add_argument('-u', dest='user_id', required=False, type=str,
+                           help='UserId of user, allows the results to filter out user\'s collection')
     parser_0.set_defaults(func=recommend_tracks)
 
     #parser_1 = subparsers.add_parser('function2', help='Running func2...')
