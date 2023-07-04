@@ -5,14 +5,11 @@ import json
 
 from relationships import Relationships
 from models import Id, Track, User, UserId, TrackId
+from utilities import _sort_user_friend_relationship
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
-USERS: dict[UserId, User] = {}
-TRACKS: dict[TrackId, Track] = {}
-
-PATH = "/Users/sabjorn/Dropbox/tmp/bes/crawler_data"
-relationships = Relationships(PATH)
+relationships = Relationships()
 USERS = relationships.users
 TRACKS = relationships.tracks
 
@@ -20,25 +17,18 @@ logging.info(f"USERS, total count {len(USERS)}")
 logging.info(f"TRACKS, total count: {len(TRACKS)}")
 
 
-def find_sorted_relationships() -> dict[UserId, dict[UserId, set[TrackId]]]:
+def find_sorted_relationships(relationships: Relationships) -> dict[UserId, dict[UserId, set[TrackId]]]:
     ''' find overlap between 'friends' collection and own;
         rank friends based on number of overlaps
     '''
     sorted_relationships = {}
-    for user_id in USERS:
-        friends: set[UserId] = set()
-        for track_id in USERS[user_id].collection:
-            friends.update(TRACKS[track_id].owners)
-        friends.discard(user_id)
+    for user_id in relationships.users:
+        sorted_relationships[user_id] = _sort_user_friend_relationship(relationships=relationships, user_id=user_id)
 
-        matched: dict[UserId, set[TrackId]] = {}
-        for friend_id in friends:
-            overlap = USERS[friend_id].collection.intersection(USERS[user_id].collection)
-            matched[friend_id] = overlap
-        sorted_relationships[user_id] = dict(sorted(matched.items(), key=lambda x: len(x[1]), reverse=True))
     return sorted_relationships
 
-sorted_relationships = find_sorted_relationships()
+sorted_relationships = find_sorted_relationships(relationships=relationships)
+print(sorted_relationships)
 
 # the tracks that overlap between the largest number of relationships
 def find_second_order_relationships(sorted_relationships: dict[UserId, dict[UserId, set[TrackId]]], rank: int | None = None) -> dict[UserId, set[TrackId]]:

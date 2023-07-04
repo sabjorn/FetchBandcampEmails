@@ -8,8 +8,7 @@ from sqlitedict import SqliteDict
 class Relationships:
     users: dict[UserId, User] = {}
     tracks: dict[TrackId, Track] = {}
-    
-
+   
     def __init__(self, db_users_filepath: str = "recommendation_users.sqlite", db_tracks_filepath: str = "recommendation_tracks.sqlite"):
         self.users = SqliteDict(db_users_filepath)
         self.tracks = SqliteDict(db_tracks_filepath)

@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 from dataclasses import dataclass, field
 from uuid import uuid4
 from typing import Set, Dict
@@ -8,17 +9,17 @@ from typing import Set, Dict
 class Id:
     id: int 
     
-    def __int__(self):
-        return self.id
+    def __int__(self) -> int:
+        return int(self.id)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.id)
 
-    def __hash__(self):
-        return self.id
+    def __hash__(self) -> int:
+        return int(self)
 
-    def __eq__(self, other):
-        return self.id == int(other)
+    def __eq__(self, other) -> bool:
+        return int(self) == int(other)
     
 
 UserId = Id
@@ -42,11 +43,11 @@ class Track:
     def __eq__(self, other) -> bool:
         return self._id == int(other)
 
-
+TrackCollection = set[TrackId]
 @dataclass
 class User:
     _id: UserId
-    collection: set[TrackId] = field(default_factory=lambda: set())
+    collection: TrackCollection = field(default_factory=lambda: set())
 
     @property
     def id(self) -> str:
