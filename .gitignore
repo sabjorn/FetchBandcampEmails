@@ -176,3 +176,5 @@ dmypy.json
 *.json
 *.pickle
 *.txt
+
+*.sqlite

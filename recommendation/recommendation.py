@@ -11,9 +11,6 @@ from utilities import find_weighted_track_similarity
 sys.path.append("..")
 from api.tralbum_details import TralbumRequestData, get_tralbum_details
 
-USERS: dict[UserId, User] = {}
-TRACKS: dict[TrackId, Track] = {}
-
 
 def recommend_tracks(args: dict[str, Any]):
     track_ids = args.get("track_ids")
