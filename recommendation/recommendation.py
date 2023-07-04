@@ -20,7 +20,8 @@ def recommend_tracks(args: dict[str, Any]):
 
     track_ids = set(track_ids)
     track_count = args.get("recommendation_count")
-    sorted_similarity = find_weighted_track_similarity(track_ids=track_ids, count=track_count)
+    r = Relationships()
+    sorted_similarity = find_weighted_track_similarity(relationships=r, track_ids=track_ids, count=track_count)
 
     for track, count in sorted_similarity.items():
         track_request_data = TralbumRequestData(tralbum_id=track.id)

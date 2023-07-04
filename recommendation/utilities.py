@@ -5,23 +5,23 @@ from models import Id, Track, User, UserId, TrackId
 from relationships import Relationships
 
 
-def find_weighted_track_similarity(track_ids: set[TrackId], count: int | None = None) -> dict[TrackId, float]:
-    path = "/tmp/crawler"
-    relationships = Relationships(path)
-
-    USERS = relationships.users
-    TRACKS = relationships.tracks
-
+def find_weighted_track_similarity(relationships: Relationships, track_ids: set[TrackId], count: int | None = None) -> dict[TrackId, float]:
     collected = []
     for track_id in track_ids:
-        logging.info(track_id)
-        track = TRACKS.get(track_id)
+        logging.debug(track_id)
+        track = relationships.tracks.get(track_id)
         if not track:
             logging.debug(f"track_id: {track_id} not found")
             continue
 
-        for owners in track.owners:
-            collection = USERS[owners].collection
+        for owner in track.owners:
+            owner_id = owner.id
+            user = relationships.users.get(owner_id)
+            if not user:
+                logging.debug(f"owner_id: {owner_id} not found for track_id: {track_id}")
+                continue
+
+            collection = user.collection
             collection -= track_ids
             collected += collection
 
