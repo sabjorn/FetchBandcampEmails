@@ -31,8 +31,8 @@ class Track:
     owners: set[UserId] = field(default_factory=lambda: set())
     
     @property
-    def id(self) -> str:
-        return str(self._id)
+    def id(self) -> TrackId:
+        return self._id
 
     def __int__(self) -> int:
         return int(self._id)
@@ -50,8 +50,8 @@ class User:
     collection: TrackCollection = field(default_factory=lambda: set())
 
     @property
-    def id(self) -> str:
-        return str(self._id)
+    def id(self) -> UserId:
+        return self._id
     
     def __int__(self) -> int:
         return int(self._id)

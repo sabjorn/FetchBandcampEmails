@@ -4,14 +4,15 @@ import collections
 from models import Id, Track, User, UserId, TrackId, TrackCollection
 from relationships import Relationships
 
+
 def _sort_user_friend_relationship(relationships: Relationships, user_id: UserId) -> dict[UserId, TrackCollection]:
     ''' find overlap between 'friends' collection and own;
         rank friends based on number of overlaps
     '''
-    if not relationships.users.get(str(user_id)):
+    if not relationships.users.get(user_id):
         logging.error(f"{user_id} does not exist in db")
 
-    user_collection = relationships.users[str(user_id)].collection
+    user_collection = relationships.users[user_id].collection
 
     friends: set[UserId] = set()
     for track in user_collection:
@@ -22,8 +23,7 @@ def _sort_user_friend_relationship(relationships: Relationships, user_id: UserId
     friends.discard(user_id)
 
     matched: dict[UserId, TrackCollection] = {}
-    for friend in friends:
-        friend_id = friend.id
+    for friend_id in friends:
         if not relationships.users.get(friend_id):
             logging.debug(f"{user_id}'s friend {friend_id} does not exist in db")
             continue
@@ -33,6 +33,7 @@ def _sort_user_friend_relationship(relationships: Relationships, user_id: UserId
     sorted_relationships = dict(sorted(matched.items(), key=lambda x: len(x[1]), reverse=True))
 
     return sorted_relationships
+
 
 def find_weighted_track_similarity(relationships: Relationships, track_ids: set[TrackId], count: int | None = None, user_id: UserId | None = None) -> dict[TrackId, float]:
     user_collection = set()
