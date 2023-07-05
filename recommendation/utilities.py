@@ -96,7 +96,7 @@ def calculate_track_popularity_list(relationships: Relationships, user_id: UserI
             continue
         
         # this section is commutative and can be cached as such
-        friend_collection = friend.collection.intersection(user.collection)
+        friend_collection = friend.collection - user.collection
         for track_id in friend_collection:
             if track_popularity.get(track_id):
                 continue
