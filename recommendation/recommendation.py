@@ -6,7 +6,7 @@ from typing import Any
 
 from models import Id, Track, User, UserId, TrackId
 from relationships import Relationships
-from utilities import find_weighted_track_similarity, calculate_track_popularity_list
+from utilities import find_weighted_track_similarity, calculate_track_popularity_list, calculate_biased_track_popularity
 
 sys.path.append("..")
 from api.tralbum_details import TralbumRequestData, get_tralbum_details
@@ -38,7 +38,19 @@ def popularity(args: dict[str, Any]):
     for i, (track_id, count) in enumerate(track_popularity.items()):
         if i > 3:
             break
-        print(track_id, count)
+        track_request_data = TralbumRequestData(tralbum_id=int(track_id))
+        tralbum_details = get_tralbum_details(track_request_data)
+        logging.info(f"count: {count} -- {tralbum_details.get('title')}: {tralbum_details.get('bandcamp_url')}")
+
+
+def bias(args: dict[str, Any]):
+    user_id = args.get("user_id")
+    r = Relationships()
+    bias = calculate_biased_track_popularity(relationships=r, user_id=UserId(user_id))
+    
+    for i, (track_id, count) in enumerate(bias.items()):
+        if i > 3:
+            break
         track_request_data = TralbumRequestData(tralbum_id=int(track_id))
         tralbum_details = get_tralbum_details(track_request_data)
         logging.info(f"count: {count} -- {tralbum_details.get('title')}: {tralbum_details.get('bandcamp_url')}")
@@ -63,6 +75,11 @@ def main(argv):
     parser_1.add_argument('-u', dest='user_id', required=True, type=str,
                            help='UserId of user, allows the results to filter out user\'s collection')
     parser_1.set_defaults(func=popularity)
+
+    parser_2 = subparsers.add_parser('bias', help='calculate track popularity by bias weighting')
+    parser_2.add_argument('-u', dest='user_id', required=True, type=str,
+                           help='UserId of user, allows the results to filter out user\'s collection')
+    parser_2.set_defaults(func=bias)
 
     args = parser.parse_args()
     if not hasattr(args, 'func'):
