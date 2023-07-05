@@ -6,7 +6,7 @@ from typing import Any
 
 from models import Id, Track, User, UserId, TrackId
 from relationships import Relationships
-from utilities import find_weighted_track_similarity
+from utilities import find_weighted_track_similarity, calculate_track_popularity_list
 
 sys.path.append("..")
 from api.tralbum_details import TralbumRequestData, get_tralbum_details
@@ -30,10 +30,24 @@ def recommend_tracks(args: dict[str, Any]):
         logging.info(f"count: {count} -- {tralbum_details.get('title')}: {tralbum_details.get('bandcamp_url')}")
 
 
-def main(argv):
-    logging.basicConfig(level=logging.DEBUG)
+def popularity(args: dict[str, Any]):
+    user_id = args.get("user_id")
+    r = Relationships()
+    track_popularity = calculate_track_popularity_list(relationships=r, user_id=UserId(user_id))
+    
+    for i, (track_id, count) in enumerate(track_popularity.items()):
+        if i > 3:
+            break
+        print(track_id, count)
+        track_request_data = TralbumRequestData(tralbum_id=int(track_id))
+        tralbum_details = get_tralbum_details(track_request_data)
+        logging.info(f"count: {count} -- {tralbum_details.get('title')}: {tralbum_details.get('bandcamp_url')}")
 
+
+def main(argv):
     parser = argparse.ArgumentParser(description='Bandcamp Recommendation Engine')
+    parser.add_argument('-v', '--verbose',
+                    action='store_true')
     subparsers = parser.add_subparsers(help='Commands')
 
     parser_0 = subparsers.add_parser('tracks', help='Provide a track ID to get recommendations')
@@ -41,23 +55,24 @@ def main(argv):
                            help='Bandcamp track_ids')
     parser_0.add_argument('-n', dest='recommendation_count', required=False, default=4, type=int,
                            help='Number of recommendated tracks returned, DEFAULT=1')
-    parser_0.add_argument('-u', dest='user_id', required=False, type=str,
+    parser_0.add_argument('-u', dest='user_id', required=False, type=int,
                            help='UserId of user, allows the results to filter out user\'s collection')
     parser_0.set_defaults(func=recommend_tracks)
 
-    #parser_1 = subparsers.add_parser('function2', help='Running func2...')
-    #parser_1.add_argument('-time', required=False, dest='time', default=None, action='store',
-    #                       help='Time in minutes. DEFAULT=No time set.')
-    #parser_1.set_defaults(func=function2)
+    parser_1 = subparsers.add_parser('popularity', help='calculate track popularity')
+    parser_1.add_argument('-u', dest='user_id', required=True, type=str,
+                           help='UserId of user, allows the results to filter out user\'s collection')
+    parser_1.set_defaults(func=popularity)
 
     args = parser.parse_args()
     if not hasattr(args, 'func'):
         logging.error('no command found')
         return
     
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+
     args_dict = vars(args)
     args.func(args_dict)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
     main(sys.argv[1:])

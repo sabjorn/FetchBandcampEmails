@@ -5,7 +5,7 @@ import json
 
 from relationships import Relationships
 from models import Id, Track, User, UserId, TrackId
-from utilities import _sort_user_friend_relationship
+from utilities import _sort_user_friend_relationship, calculate_track_popularity_list
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -121,27 +121,8 @@ def calculate_weighted_track_frequency(sorted_relationships: dict[UserId, dict[U
 # note, probably best to make a NEIGHBOURS table? makes the calculations easier?
 # track_frequency and weighted_tarck_frequency still have USER's own tracks in so not great for suggestions... currently -- or was that my point?
 
-# this is just a better implementation of track_frequency
-def calculate_track_popularity_list(user_id) -> dict[TrackId, int]:
-    ''' generates a list of all tracks that your friends own and 
-        the count from overlap in collections
-    '''
-    track_popularity = {}
-    friends = set(sorted_relationships[user_id].keys())
-    for friend_id in friends:
-        friend_collection = USERS[friend_id].collection - USERS[user_id].collection
-        for track_id in USERS[friend_id].collection:
-            track_users = TRACKS[track_id].owners
-            count = len(track_users.intersection(friends))
-            if not count:
-                continue
-            if track_popularity.get(track_id):
-                continue
-            track_popularity[track_id] = count
-    return dict(sorted(track_popularity.items(), key=lambda x: x[1], reverse=True))
-
-user_id = 4601725
-track_popularity = calculate_track_popularity_list(user_id)
+user_id = UserId(4601725)
+track_popularity = calculate_track_popularity_list(relationships=relationships, user_id=user_id)
 
 for i, (track_id, count) in enumerate(track_popularity.items()):
     if i > 10:
