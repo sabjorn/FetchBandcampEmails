@@ -94,8 +94,9 @@ def calculate_track_popularity_list(relationships: Relationships, user_id: UserI
         friend = relationships.users.get(friend_id)
         if not friend:
             continue
-
-        friend_collection = friend.collection - user.collection
+        
+        # this section is commutative and can be cached as such
+        friend_collection = friend.collection.intersection(user.collection)
         for track_id in friend_collection:
             if track_popularity.get(track_id):
                 continue
@@ -107,4 +108,32 @@ def calculate_track_popularity_list(relationships: Relationships, user_id: UserI
             track_popularity[track_id] = count
 
     return dict(sorted(track_popularity.items(), key=lambda x: x[1], reverse=True))
+
+
+def calculate_biased_track_popularity(relationships: Relationships, user_id: UserId) -> dict[TrackId, float]:
+    if not relationships.users.get(user_id):
+        logging.error(f"{user_id} not in users")
+        return {}
+    
+    user_collection_length = len(relationships.users[user_id].collection)
+
+    sorted_relationships = _sort_user_friend_relationship(relationships=relationships, user_id=user_id)
+    user_bias: dict[UserId, float] = {}
+    for friend_id, overlap in sorted_relationships.items():
+        user_bias[friend_id] = len(overlap) / user_collection_length
+
+    # soooo expensive - could re-write to just iterate over 'track_popularity.keys()' instead?
+    bias_popularity: dict[TrackId, float] = {} 
+    track_popularity = calculate_track_popularity_list(relationships=relationships, user_id=user_id)
+    friends = sorted_relationships
+    for track_id in track_popularity:
+        bias_total = 0.0
+        for friend_id, collection in friends.items():
+            if track_id not in collection:
+                continue
+            bias_total += user_bias[friend_id]
+        bias_popularity[track_id] = bias_total
+    bias_popularity =  dict(sorted(bias_popularity.items(), key=lambda x: x[1], reverse=True))
+    
+    return bias_popularity
 

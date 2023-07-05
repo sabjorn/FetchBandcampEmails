@@ -5,7 +5,7 @@ import json
 
 from relationships import Relationships
 from models import Id, Track, User, UserId, TrackId
-from utilities import _sort_user_friend_relationship, calculate_track_popularity_list
+from utilities import _sort_user_friend_relationship, calculate_track_popularity_list, calculate_biased_track_popularity
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -130,24 +130,7 @@ for i, (track_id, count) in enumerate(track_popularity.items()):
     print(track_id, count)
 
 
-def calculate_user_bias(user_id) -> dict[UserId, float]:
-    user_bias: dict[UserId, float] = {}
-    for friend_id, overlap in sorted_relationships[user_id].items():
-        user_bias[friend_id] = len(overlap) / len(USERS[user_id].collection)
-    return user_bias
-USER_BIAS = calculate_user_bias(user_id)
-
-# soooo expensive - could re-write to just iterate over 'track_popularity.keys()' instead?
-bias_popularity: dict[TrackId, float] = {} 
-friends = sorted_relationships[user_id]
-for track_id in track_popularity:
-    bias_total = 0.0
-    for friend_id, collection in friends.items():
-        if track_id not in collection:
-            continue
-        bias_total += USER_BIAS[friend_id]
-    bias_popularity[track_id] = bias_total
-bias_popularity =  dict(sorted(bias_popularity.items(), key=lambda x: x[1], reverse=True))
+bias_popularity = calculate_biased_track_popularity(relationships=relationships, user_id=user_id)
 
 
 for i, (track_id, count) in enumerate(bias_popularity.items()):
