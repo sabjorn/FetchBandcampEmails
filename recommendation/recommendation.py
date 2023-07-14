@@ -36,7 +36,7 @@ def popularity(args: dict[str, Any]):
     track_popularity = calculate_track_popularity_list(relationships=r, user_id=UserId(user_id))
     
     for i, (track_id, count) in enumerate(track_popularity.items()):
-        if i > 3:
+        if i >= args.get("recommendation_count", 1):
             break
         track_request_data = TralbumRequestData(tralbum_id=int(track_id))
         tralbum_details = get_tralbum_details(track_request_data)
@@ -49,7 +49,7 @@ def bias(args: dict[str, Any]):
     bias = calculate_biased_track_popularity(relationships=r, user_id=UserId(user_id))
     
     for i, (track_id, count) in enumerate(bias.items()):
-        if i > 3:
+        if i >= args.get("recommendation_count", 1):
             break
         track_request_data = TralbumRequestData(tralbum_id=int(track_id))
         tralbum_details = get_tralbum_details(track_request_data)
@@ -65,8 +65,8 @@ def main(argv):
     parser_0 = subparsers.add_parser('tracks', help='Provide a track ID to get recommendations')
     parser_0.add_argument('track_ids', type=int, nargs='+',
                            help='Bandcamp track_ids')
-    parser_0.add_argument('-n', dest='recommendation_count', required=False, default=4, type=int,
-                           help='Number of recommendated tracks returned, DEFAULT=1')
+    parser_0.add_argument('-n', dest='recommendation_count', required=False, default=5, type=int,
+                           help='Number of recommendated tracks returned, DEFAULT=5')
     parser_0.add_argument('-u', dest='user_id', required=False, type=int,
                            help='UserId of user, allows the results to filter out user\'s collection')
     parser_0.set_defaults(func=recommend_tracks)
@@ -74,11 +74,15 @@ def main(argv):
     parser_1 = subparsers.add_parser('popularity', help='calculate track popularity')
     parser_1.add_argument('-u', dest='user_id', required=True, type=str,
                            help='UserId of user, allows the results to filter out user\'s collection')
+    parser_1.add_argument('-n', dest='recommendation_count', required=False, default=5, type=int,
+                           help='Number of recommendated tracks returned, DEFAULT=5')
     parser_1.set_defaults(func=popularity)
 
     parser_2 = subparsers.add_parser('bias', help='calculate track popularity by bias weighting')
     parser_2.add_argument('-u', dest='user_id', required=True, type=str,
                            help='UserId of user, allows the results to filter out user\'s collection')
+    parser_2.add_argument('-n', dest='recommendation_count', required=False, default=5, type=int,
+                           help='Number of recommendated tracks returned, DEFAULT=5')
     parser_2.set_defaults(func=bias)
 
     args = parser.parse_args()
