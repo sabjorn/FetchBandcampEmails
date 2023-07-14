@@ -2,6 +2,8 @@ import logging
 import collections
 import re
 
+from pytest import freeze_includes
+
 from models import Id, Track, User, UserId, TrackId, TrackCollection
 from relationships import Relationships
 
@@ -115,23 +117,27 @@ def calculate_biased_track_popularity(relationships: Relationships, user_id: Use
         logging.error(f"{user_id} not in users")
         return {}
     
-    user_collection_length = len(relationships.users[user_id].collection)
+    user_collection = relationships.users[user_id].collection
 
     sorted_relationships = _sort_user_friend_relationship(relationships=relationships, user_id=user_id)
     user_bias: dict[UserId, float] = {}
     for friend_id, overlap in sorted_relationships.items():
-        user_bias[friend_id] = len(overlap) / user_collection_length
+        user_bias[friend_id] = len(overlap) / len(user_collection)
 
-    # soooo expensive - could re-write to just iterate over 'track_popularity.keys()' instead?
+    friends_collections = set()
+    for friend in _get_friends(relationships=relationships, user_id=user_id):
+        friends_collections.update(relationships.users[friend].collection)
+    friends_collections -= user_collection 
+
     bias_popularity: dict[TrackId, float] = {} 
-    track_popularity = calculate_track_popularity_list(relationships=relationships, user_id=user_id)
-    friends = sorted_relationships
-    for track_id in track_popularity:
+    for track_id in friends_collections:
         bias_total = 0.0
-        for friend_id, collection in friends.items():
-            if track_id not in collection:
+        for friend_track_id in relationships.tracks[track_id].owners:
+            if friend_track_id == track_id:
                 continue
-            bias_total += user_bias[friend_id]
+            if not user_bias.get(friend_track_id):
+                continue
+            bias_total += user_bias[friend_track_id]
         bias_popularity[track_id] = bias_total
     bias_popularity =  dict(sorted(bias_popularity.items(), key=lambda x: x[1], reverse=True))
     
