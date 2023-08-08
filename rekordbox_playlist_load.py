@@ -5,6 +5,7 @@ import logging
 import argparse
 import csv
 from time import sleep
+import dataclasses
 
 import json
 
@@ -40,7 +41,15 @@ def main(args):
           data = [entry['Comments'].replace("'","\"") for entry in entries]
 
         for d in data:
-            bc_purchase = BCPurchase(**json.loads(d))
+            try:
+                json_data = json.loads(d)
+            except Exception as e:
+                logging.error(d, e)
+                continue
+            exit()
+            field_names = set(f.name for f in dataclasses.fields(BCPurchase))
+            bc_purchase_dict = {k:v for k,v in json_data.items() if k in field_names}
+            bc_purchase = BCPurchase(**bc_purchase_dict)
             tracks_to_purchase.add(bc_purchase)
 
     logger.debug(f"num tracks to purchase: {len(tracks_to_purchase)}")
