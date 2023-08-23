@@ -18,11 +18,6 @@ from api.get_bandcamp_collection import get_collection
 from api.add_to_cart import add_to_cart
 
 def main(args):
-    logger = logging.getLogger()
-    handler = logging.StreamHandler()
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
-
     parser = argparse.ArgumentParser(description="Loads Rekordbox txt playlist exports and pulls metadata from comments")
     parser.add_argument('-i', '--input', nargs='+', help='Provide list of urls to process', required=True)
     parser.add_argument('-u', '--user_id', type=str, required=True)  
@@ -46,13 +41,12 @@ def main(args):
             except Exception as e:
                 logging.error(d, e)
                 continue
-            exit()
             field_names = set(f.name for f in dataclasses.fields(BCPurchase))
             bc_purchase_dict = {k:v for k,v in json_data.items() if k in field_names}
             bc_purchase = BCPurchase(**bc_purchase_dict)
             tracks_to_purchase.add(bc_purchase)
 
-    logger.debug(f"num tracks to purchase: {len(tracks_to_purchase)}")
+    logging.debug(f"num tracks to purchase: {len(tracks_to_purchase)}")
 
     s = requests.Session()
     retry = Retry(total=5, connect=3, backoff_factor=5, status_forcelist=[429])
@@ -65,7 +59,7 @@ def main(args):
     if not args.skip:
         collection = get_collection(fan_id=args.user_id, cookie=cookie, session=s)
 
-    logger.debug(f"collection length: {len(collection)}");
+    logging.debug(f"collection length: {len(collection)}");
     collection_tralbum_keys = {f"{t['item_type'][0]}{t['item_id']}" for t in collection}
   
     purchase_tralbum = {f"t{t.track_id}": t for t in tracks_to_purchase}
@@ -87,7 +81,7 @@ def main(args):
         track_id = purchase_tralbum[key].track_id
         unit_price = purchase_tralbum[key].unit_price if purchase_tralbum[key].unit_price > 0.0 else 1.0
         
-        logger.info(f"adding {track_id} to cart")
+        logging.info(f"adding {track_id} to cart")
         
         cart_data = {}
         count = 0
@@ -107,4 +101,5 @@ def main(args):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     cart_items = main(sys.argv[1:]) 
