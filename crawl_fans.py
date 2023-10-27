@@ -1,6 +1,7 @@
 import collections
 import sys
 import os
+import time
 import argparse
 import logging
 from random import choice
@@ -20,15 +21,23 @@ COOKIES = [None] # make a cookie pool
 # get own collection, save to disc as json
 # for each track in collection, find who owns and make list dict[UserId, TrackId], save to disk
 # for each user, get collection
-def collection_helper(fan_id, output_dir):
+def collection_helper(fan_id, output_dir, s, primary=False):
     items = []
     newer_than = None
     filepath = os.path.join(output_dir, f"{fan_id}.json")
     if os.path.exists(filepath):
-        newer_than_unixtime = os.path.getmtime(filepath)
-        newer_than = datetime.datetime.fromtimestamp(newer_than_unixtime).astimezone()
-        with open(filepath, "r") as f:
-           items = json.load(f)
+        if not primary:
+            newer_than_unixtime = os.path.getmtime(filepath)
+            newer_than = datetime.datetime.fromtimestamp(newer_than_unixtime).astimezone()
+
+        should_check = newer_than and ((time.time() - newer_than.timestamp()) / 60 / 60) > 24
+        if(not should_check and not primary): return items # don't open if less than 24 hours old
+
+        try:
+            with open(filepath, "r") as f:
+               items = json.load(f)
+        except Exception as e:
+            logging.error(e, fan_id) 
      
     s = requests.Session()
     retry = Retry(total=5, connect=3, backoff_factor=10, allowed_methods=['POST'], status_forcelist=[429])
@@ -72,36 +81,44 @@ def main(args):
     logger.setLevel(logging.INFO)
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--fan_id", 
-            required=True, type=str, help="user id of starting user's collection")
+    parser.add_argument("-f", "--fan_ids", 
+            required=True, type=str, nargs='+', help="user ids of starting user's collection")
     parser.add_argument("-d", "--output_dir", type=str, default="./")
     args = parser.parse_args(args)
-    
-    logger.info("grabbing first collection")  
-    primary_collection = collection_helper(args.fan_id, args.output_dir)
+   
+    logger.info(f"grabbing collection for users: {args.fan_ids}")
 
-    logger.info("collecting track owners")  
-    track_owners = {}
-    collection_chunks = chunkify(primary_collection, 100)
-    for chunk in collection_chunks:
-        cookie = choice(COOKIES)
-        if not cookie: # repeate -- factor out
-            s = requests.Session()
-            s.get('https://bandcamp.com')
-            cookie = s.cookies.get('client_id')
-            COOKIES.append(cookie)
+    s = requests.Session()
+    retry = Retry(total=100, connect=0.1, backoff_factor=20, allowed_methods=['POST'], status_forcelist=[429])
+    adapter = HTTPAdapter(max_retries=retry)
+    s.mount('https://', adapter)
+    s.headers.update(HEADERS);
 
-        collectors = collected_by.get_collected_by(chunk, cookie)
-        for key, val in collectors.items():
-            track_owners[key] = set([item['fan_id'] for item in val['thumbs']])
+    for fan_id in args.fan_ids:
+        logger.info(f"grabbing first collection: {fan_id}")  
+        primary_collection = collection_helper(fan_id, args.output_dir, s, primary=True)
 
-    user_list = set()
-    for val in track_owners.values():
-        user_list = {*user_list, *val} 
-    
-    for user in user_list:
-        logger.info(f"getting collection for {user}")
-        collection_helper(user, args.output_dir)
+        logger.info("collecting track owners")  
+        track_owners = {}
+        collection_chunks = chunkify(primary_collection, 100)
+        for chunk in collection_chunks:
+            cookie = choice(COOKIES)
+            if not cookie: # repeate -- factor out
+                s.get('https://bandcamp.com')
+                cookie = s.cookies.get('client_id')
+                COOKIES.append(cookie)
+
+            collectors = collected_by.get_collected_by(chunk, cookie, session=s)
+            for key, val in collectors.items():
+                track_owners[key] = set([item['fan_id'] for item in val['thumbs']])
+
+        user_list = set()
+        for val in track_owners.values():
+            user_list = {*user_list, *val} 
+        
+        for user in user_list:
+            logger.info(f"getting collection for {user}")
+            collection_helper(user, args.output_dir, s)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

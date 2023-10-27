@@ -5,15 +5,16 @@ import argparse
 import requests
 
 
-def get_collected_by(tralbum_keys: list[str], cookie):
+def get_collected_by(tralbum_keys: list[str], cookie, session=None):
+    if not session:
+        session = requests
     url = "https://bandcamp.com/api/mobile/25/collected_by"
-
     headers = {
         'Cookie': f'identity={cookie}',
     }
     data = {"tralbum_keys": tralbum_keys}
 
-    r = requests.post(url, headers=headers, json=data)
+    r = session.post(url, headers=headers, json=data)
     json = r.json()
 
     return json['collected_by']
